@@ -1,0 +1,67 @@
+# YouTube to MP3 Downloader
+
+Este projeto permite baixar vídeos do YouTube e convertê-los para MP3 usando `yt-dlp` e `moviepy`.
+
+Projeto para estudo de python e também fácilitar o download de músicas para algumas situações, onde que pela interneet é mais lento.
+No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opções confome o tempo.
+
+## Pré-requisitos
+
+- Python 3.6 ou superior
+- `pip` (gerenciador de pacotes Python)
+
+
+## Featured Features
+1. Selecionar opções como `.mp3`, `.wav`, `.mp4`, entre outros;
+
+
+
+## Instalação
+
+1. **Clone o repositório ou faça o download dos arquivos do projeto.**
+
+2. **Instale as dependências necessárias:**
+
+    Abra o terminal e navegue até o diretório do projeto. Em seguida, execute o comando:
+
+    ```bash
+    pip install yt-dlp
+    ```
+
+3. **Verifique e configure o `ffmpeg`:**
+
+    Certifique-se de que o `ffmpeg` esteja instalado e disponível no `PATH` do seu sistema.
+
+    - **No Windows**: Baixe o `ffmpeg` de [ffmpeg.org](https://ffmpeg.org/download.html) e adicione o diretório `bin` ao `PATH`.
+
+    - **No macOS**: Instale o `ffmpeg` usando `brew`:
+
+        ```bash
+        brew install ffmpeg
+        ```
+
+    - **No Linux**: Instale o `ffmpeg` usando o gerenciador de pacotes da sua distribuição, por exemplo:
+
+        ```bash
+        sudo apt update
+        sudo apt install ffmpeg
+        ```
+
+## Uso
+
+1. **Execute o script Python:**
+
+    No terminal, navegue até o diretório do projeto e execute o script:
+
+    ```bash
+    python baixar_audio.py
+    ```
+
+2. **Insira a URL do vídeo do YouTube:**
+
+    Quando solicitado, insira a URL do vídeo do YouTube que deseja baixar e converter para MP3.
+
+3. **O áudio será baixado e convertido para MP3:**
+
+    O arquivo MP3 será salvo no diretório atual.
+
