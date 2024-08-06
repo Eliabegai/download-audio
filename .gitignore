@@ -1,2 +1,3 @@
 /audios
 .venv
+.DS_Store
