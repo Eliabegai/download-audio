@@ -1,6 +1,6 @@
 # YouTube to MP3 Downloader
 
-Este projeto permite baixar vídeos do YouTube e convertê-los para MP3 usando `yt-dlp` e `moviepy`.
+Este projeto permite baixar vídeos do YouTube e convertê-los para MP3 usando `yt-dlp`.
 
 Projeto para estudo de python e também fácilitar o download de músicas para algumas situações, onde que pela interneet é mais lento.
 No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opções confome o tempo.
@@ -65,3 +65,12 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 
     O arquivo MP3 será salvo no diretório atual.
 
+4. **Criar Executável
+    - Required `pyinstaller`
+
+    ```bash
+    pyinstaller --onefile baixar_audio.py
+    ```
+
+    **dist
+    Arquivo executável para download dos audios.
