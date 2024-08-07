@@ -25,7 +25,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     Abra o terminal e navegue até o diretório do projeto. Em seguida, execute o comando:
 
     ```bash
-    pip install yt-dlp
+    pip install -r requirements.txt
     ```
 
 3. **Verifique e configure o `ffmpeg`:**
@@ -65,12 +65,12 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 
     O arquivo MP3 será salvo no diretório atual.
 
-4. **Criar Executável
+4. **Criar Executável**
     - Required `pyinstaller`
 
     ```bash
     pyinstaller --onefile baixar_audio.py
     ```
 
-    **dist
-    Arquivo executável para download dos audios.
+   **/dist**
+   > Arquivo executável para download dos audios.
