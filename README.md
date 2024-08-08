@@ -65,12 +65,23 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 
     O arquivo MP3 será salvo no diretório atual.
 
-4. **Criar Executável**
+4. **Criar Executável MAC**
     - Required `pyinstaller`
 
     ```bash
-    pyinstaller --onefile baixar_audio.py
+    pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac baixar_audio.py
     ```
 
    **/dist**
    > Arquivo executável para download dos audios.
+
+5. **Criar Executável Windows**
+    - Required `pyinstaller`
+    ```bash
+    python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows baixar_audio.py
+    ``` 
+
+    **/dist**
+   > Arquivo executável para download dos audios.
+
+/dist/mac
