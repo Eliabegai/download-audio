@@ -17,6 +17,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 ---
 ## Featured Features
 1. Selecionar opções como `.mp3`, `.wav`, `.mp4`, entre outros;
+2. Force installation `ffmpeg` caso não tenha no computador. Windows ou Mac 
 
 ---
 ## Instalação
