@@ -5,18 +5,26 @@ Este projeto permite baixar vídeos do YouTube e convertê-los para MP3 usando `
 Projeto para estudo de python e também fácilitar o download de músicas para algumas situações, onde que pela interneet é mais lento.
 No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opções confome o tempo.
 
+---
+# Download
+
+### Mac
+[Baixar Executável](dist/mac/baixar-audio-mac)
+
+### Windows
+[Baixar Executável](dist/windows/baixar-audio-windows.exe)
+
+---
+## Featured Features
+1. Selecionar opções como `.mp3`, `.wav`, `.mp4`, entre outros;
+
+---
+## Instalação
+
 ## Pré-requisitos
 
 - Python 3.6 ou superior
 - `pip` (gerenciador de pacotes Python)
-
-
-## Featured Features
-1. Selecionar opções como `.mp3`, `.wav`, `.mp4`, entre outros;
-
-
-
-## Instalação
 
 1. **Clone o repositório ou faça o download dos arquivos do projeto.**
 
@@ -25,7 +33,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     Abra o terminal e navegue até o diretório do projeto. Em seguida, execute o comando:
 
     ```bash
-    pip install -r requirements.txt
+    pip install yt_dlp pyinstaller
     ```
 
 3. **Verifique e configure o `ffmpeg`:**
@@ -46,7 +54,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
         sudo apt update
         sudo apt install ffmpeg
         ```
-
+---
 ## Uso
 
 1. **Execute o script Python:**
@@ -64,7 +72,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 3. **O áudio será baixado e convertido para MP3:**
 
     O arquivo MP3 será salvo no diretório atual.
-
+   
 4. **Criar Executável MAC**
     - Required `pyinstaller`
 
@@ -72,7 +80,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac baixar_audio.py
     ```
 
-   **/dist**
+   **/dist/mac**
    > Arquivo executável para download dos audios.
 
 5. **Criar Executável Windows**
@@ -81,7 +89,5 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows baixar_audio.py
     ``` 
 
-    **/dist**
+    **/dist/windows**
    > Arquivo executável para download dos audios.
-
-/dist/mac
