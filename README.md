@@ -41,7 +41,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 
     Certifique-se de que o `ffmpeg` esteja instalado e disponível no `PATH` do seu sistema.
 
-    - **No Windows**: Baixe o `ffmpeg` de <a href="https://ffmpeg.org/download.html" target="_blank">ffmpeg.org</a> e adicione o diretório `bin` ao `PATH`.
+    - **No Windows**: Baixe o `ffmpeg` de [ffmpeg.org](https://ffmpeg.org/download.html) e adicione o diretório `bin` ao `PATH`.
        ```bash
        winget install "FFmpeg (Essentials Build)"
        ```
