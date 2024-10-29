@@ -7,8 +7,6 @@ total_videos = 0
 current_video = 0
 caminho_cookies = f"{os.getcwd()}/cookies.txt"
 
-url_teste = 'https://www.youtube.com/playlist?list=PLmK6JDXfSF4hJyueER0xFc5LgnI_Cj8zb'
-
 def my_hook(d):
     global current_video
     if d['status'] == 'finished':
