@@ -3,9 +3,10 @@ import os
 import sys
 import re
 import shutil
-
+from colorama import Fore, Back, Style, init
 
 os.getcwd()
+init(autoreset=True)
 
 total_videos = 0
 current_video = 0
@@ -189,6 +190,7 @@ def baixar_por_titulo(titulo, output_path):
 
 largura_terminal = shutil.get_terminal_size().columns
 
+tituloDownload = f'{Fore.YELLOW}{Back.BLACK}DOWNLOAD AUDIO, VÍDEO E PLAYLIST DO YOUTUBE{Style.RESET_ALL}'
 
 menu_texto = '''
     Selecione alguma opção abaixo \n
@@ -202,7 +204,7 @@ menu_texto = '''
 def headConsole():
     print("=" * largura_terminal)
     print()
-    print(('\033[33;40mDOWNLOAD AUDIO, VÍDEO E PLAYLIST DO YOUTUBE\033[m').center(largura_terminal, " "))
+    print(tituloDownload.center(largura_terminal, " "))
     print()
 
     print("=" * largura_terminal)
@@ -215,9 +217,9 @@ if __name__ == "__main__":
     condicao = True
 
     if os.path.exists(caminho_cookies):
-        print('\033[13;40mArquivo de cookies encontrado.\033[m')
+        print(f'{Fore.YELLOW}{Back.BLACK}Arquivo de cookies encontrado.{Style.RESET_ALL}')
     else:
-        print("Não encontrado arquivo \033[33;20mcoockies.txt\033[m na pasta executada.")
+        print(f"Não encontrado arquivo {Fore.YELLOW}{Back.BLACK}coockies.txt{Style.RESET_ALL} na pasta executada.")
         sys.exit(1) 
 
     headConsole()
@@ -231,7 +233,7 @@ if __name__ == "__main__":
 
 
         if selectOption == '1':
-            print('\033[33;40m\nAudio Selecionado\n\033[m')
+            print(f'{Fore.YELLOW}{Back.BLACK}\nAudio Selecionado\n{Style.RESET_ALL}')
             print('Digite 0 (zero) para retornar')
             url_Audio = input('Insira a url aqui: ')
             if(url_Audio == '0'):
@@ -254,7 +256,7 @@ if __name__ == "__main__":
                 print("Falha na validação da URL. Verifique e tente novamente.")
 
         elif selectOption == '2':
-            print('\033[33;40m\nVídeo Selecionado\n\033[m')
+            print(f'{Fore.YELLOW}{Back.BLACK}\nVídeo Selecionado\n{Style.RESET_ALL}')
             print('Digite 0 (zero) para retornar')
             url_Video = str(input('Insira a url aqui: '))
 
@@ -278,7 +280,7 @@ if __name__ == "__main__":
                 print("Falha na validação da URL. Verifique e tente novamente.")
 
         elif selectOption == '3':
-            print('\033[33;40m\nPlaylist Selecionado\n\033[m')
+            print('{Fore.YELLOW}{Back.BLACK}\nPlaylist Selecionado\n{Style.RESET_ALL}')
             print('Digite 0 (zero) para retornar')
             url_Playlist = str(input('Insira a url aqui: '))
 
@@ -302,7 +304,7 @@ if __name__ == "__main__":
                 print("Falha na validação da URL. Verifique e tente novamente.")
 
         elif selectOption == '4':
-            print('\033[33;40m\nDownload por Título\n\033[m')
+            print('{Fore.YELLOW}{Back.BLACK}\nDownload por Título\n{Style.RESET_ALL}')
             print('Qual o nome da música ou do video que deseja baixar?')
             print('Digite 0 (zero) para retornar')
             

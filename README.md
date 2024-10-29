@@ -97,7 +97,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 5. **Criar Executável Windows**
     - Required `pyinstaller`
     ```bash
-    python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows baixar_audio.py
+    python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows/2_0 baixar_audio.py
     ``` 
 
     **/dist/windows**
