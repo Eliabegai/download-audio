@@ -1,5 +1,6 @@
 import yt_dlp
 import os
+import sys
 
 os.getcwd()
 
@@ -142,6 +143,14 @@ def baixar_por_titulo(titulo):
 
 if __name__ == "__main__":
 
+    condicao = True
+
+    if os.path.exists(caminho_cookies):
+        print('\033[13;40mArquivo de cookies encontrado.\033[m')
+    else:
+        print("Não encontrado arquivo \033[33;20mcoockies.txt\033[m na pasta executada.")
+        sys.exit(1) 
+
     print('\033[33;40m\nDOWNLOAD AUDIO OU VIDEO\n\033[m')
     print(
     '''==================================
@@ -151,8 +160,6 @@ if __name__ == "__main__":
     Opção 3: Download PLaylist
     Opção 4: Buscar por Título
 ================================== \n''')
-    
-    condicao = True
 
     while condicao:
 
