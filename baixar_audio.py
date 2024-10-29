@@ -280,7 +280,7 @@ if __name__ == "__main__":
                 print("Falha na validação da URL. Verifique e tente novamente.")
 
         elif selectOption == '3':
-            print('{Fore.YELLOW}{Back.BLACK}\nPlaylist Selecionado\n{Style.RESET_ALL}')
+            print(f'{Fore.YELLOW}{Back.BLACK}\nPlaylist Selecionado\n{Style.RESET_ALL}')
             print('Digite 0 (zero) para retornar')
             url_Playlist = str(input('Insira a url aqui: '))
 
@@ -304,7 +304,7 @@ if __name__ == "__main__":
                 print("Falha na validação da URL. Verifique e tente novamente.")
 
         elif selectOption == '4':
-            print('{Fore.YELLOW}{Back.BLACK}\nDownload por Título\n{Style.RESET_ALL}')
+            print(f'{Fore.YELLOW}{Back.BLACK}\nDownload por Título\n{Style.RESET_ALL}')
             print('Qual o nome da música ou do video que deseja baixar?')
             print('Digite 0 (zero) para retornar')
             
