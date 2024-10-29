@@ -9,13 +9,21 @@ total_videos = 0
 current_video = 0
 caminho_cookies = f"{os.getcwd()}/cookies.txt"
 
+def limpar_console():
+    # Verifica o sistema operacional e executa o comando apropriado
+    if os.name == 'nt':  # Windows
+        os.system('cls')
+    else:  # Linux e macOS
+        os.system('clear')
+
 def my_hook(d):
     global current_video
+
     if d['status'] == 'finished':
         current_video += 1
         print(f" -> Download concluído: {current_video}/{total_videos}")
     # elif d['status'] == 'downloading':
-    #     print(f"Baixando vídeo {current_video + 1}/{total_videos}: {d['_percent_str']} concluído")
+    #     print(f" ... Baixando vídeo {current_video + 1}/{total_videos}: {d['_percent_str']} concluído")
 
 
 def validar_url(url):
@@ -29,7 +37,6 @@ def validar_url(url):
         'quiet': True,
         'no_warnings': True,
         'ignoreerrors': True,
-        'default_search': 'ytsearch',
         'cookies': caminho_cookies,
     }
 
@@ -45,7 +52,8 @@ def validar_url(url):
             print("URL inválida ou conteúdo indisponível.")
             return False
         
-def validarTitle(titulo):
+def validarTitulo(titulo):
+    global total_videos
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -61,6 +69,7 @@ def validarTitle(titulo):
 
             if 'entries' in info_dict and info_dict['entries']:
                 video_info = info_dict['entries'][0]
+                total_videos = len(info_dict['entries'])
                 print(f"Vídeo encontrado: {video_info['title']}")
                 return video_info
             else:
@@ -82,6 +91,7 @@ def downloadAudio(url_download, output_path):
     'outtmpl': os.path.join(audio_folder, '%(title)s.%(ext)s'),
     'noplaylist': True,
     'cookies': caminho_cookies,
+    'progress_hooks': [my_hook],                    # Função de hook para monitorar progresso
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
         'preferredcodec': 'mp3',
@@ -107,6 +117,7 @@ def downloadVideo(url_download, output_path):
         'noplaylist': True,
         'cookies': caminho_cookies,
         'merge_output_format': 'mp4',
+        'progress_hooks': [my_hook],                    # Função de hook para monitorar progresso
         'nooverwrites': True,
         'quiet': True,
     }
@@ -157,6 +168,7 @@ def baixar_por_titulo(titulo, output_path):
         'default_search': 'ytsearch',
         'noplaylist': True,
         'ignoreerrors':True,
+        'progress_hooks': [my_hook],                    # Função de hook para monitorar progresso
         'cookies': caminho_cookies,
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
@@ -173,6 +185,17 @@ def baixar_por_titulo(titulo, output_path):
     
     print("Download e conversão concluídos!")
 
+def headConsole():
+    print(text.center(80,'\033[33;40m\n\nDOWNLOAD AUDIO, VÍDEO E PLAYLIST DO YOUTUBE\n\033[m'))
+    print('\033[33;40m\n\nDOWNLOAD AUDIO, VÍDEO E PLAYLIST DO YOUTUBE\n\033[m')
+    print(
+    '''====================================================================
+    Opção 0: Encerrar Programa
+    Opção 1: Download Audio          (.mp3)
+    Opção 2: Download Vídeo          (.mp4)
+    Opção 3: Download PLaylist       (.mp3)
+    Opção 4: Buscar por Título       (.mp3)
+==================================================================== \n''')
 
 if __name__ == "__main__":
 
@@ -184,24 +207,18 @@ if __name__ == "__main__":
         print("Não encontrado arquivo \033[33;20mcoockies.txt\033[m na pasta executada.")
         sys.exit(1) 
 
-    print('\033[33;40m\nDOWNLOAD AUDIO OU VIDEO\n\033[m')
-    print(
-    '''==================================
-    Opção 0: Encerrar Programa
-    Opção 1: Download Audio
-    Opção 2: Download Vídeo
-    Opção 3: Download PLaylist
-    Opção 4: Buscar por Título
-================================== \n''')
+    headConsole()
 
     while condicao:
 
-        selectOption = input("\nSelect Option: " )
+        selectOption = input("Selecione uma Opção: " )
         output_path = os.getcwd()  # Obtém o diretório atual
+        limpar_console()
+        headConsole()
 
 
         if selectOption == '1':
-            print('\n---------------------------------------------------\n')
+            # print('\n---------------------------------------------------\n')
             print('\033[33;40m\nAudio Selecionado\n\033[m')
             print('Digite 0 (zero) para retornar')
             url_Audio = input('Insira a url aqui: ')
@@ -225,7 +242,6 @@ if __name__ == "__main__":
                 print("Falha na validação da URL. Verifique e tente novamente.")
 
         elif selectOption == '2':
-            print('\n---------------------------------------------------\n')
             print('\033[33;40m\nVídeo Selecionado\n\033[m')
             print('Digite 0 (zero) para retornar')
             url_Video = str(input('Insira a url aqui: '))
@@ -250,7 +266,6 @@ if __name__ == "__main__":
                 print("Falha na validação da URL. Verifique e tente novamente.")
 
         elif selectOption == '3':
-            print('\n---------------------------------------------------\n')
             print('\033[33;40m\nPlaylist Selecionado\n\033[m')
             print('Digite 0 (zero) para retornar')
             url_Playlist = str(input('Insira a url aqui: '))
@@ -275,9 +290,8 @@ if __name__ == "__main__":
                 print("Falha na validação da URL. Verifique e tente novamente.")
 
         elif selectOption == '4':
-            print('\n---------------------------------------------------\n')
             print('\033[33;40m\nDownload por Título\n\033[m')
-            print('Qual o nome do título do video que deseja baixar?')
+            print('Qual o nome da música ou do video que deseja baixar?')
             print('Digite 0 (zero) para retornar')
             
             buscar_video = str(input('Buscar por... : '))
@@ -289,7 +303,7 @@ if __name__ == "__main__":
                 print('Campo Vazio. retornando...')
                 continue
 
-            resultado = validarTitle(buscar_video)
+            resultado = validarTitulo(buscar_video)
             
             if resultado:
                 print(f"URL do vídeo encontrado: {resultado['webpage_url']}")
@@ -301,7 +315,6 @@ if __name__ == "__main__":
                     print("Operação cancelada.")
 
         elif selectOption == '0':
-            print('\n---------------------------------------------------\n')
             encerrar = input('Deseja encerrar? S/N: ').lower()
             if(encerrar == 's'):
                 condicao = False

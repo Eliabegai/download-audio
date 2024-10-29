@@ -12,6 +12,8 @@
 - Adicionado opção de baixar por título
 - Melhoria na função após terminar o downlod, pois ele encerrava o o processo, agora precisa encerrar manualmente.
 - Necessário cookies logado no youtube para executar
+- Melhoria nos input de texto, fazendo validação de url e confirmação para iniciar download
+
 
 
 ## Baixar os cookies do youtube
