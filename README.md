@@ -22,6 +22,13 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 ---
 ## Instalação
 
+- Baixe os cookies do youtube com sua conta logada para facilitar o processo de download e também poder baixar playlist privada.
+
+- Salvar o arquivo no mesmo caminho do executável com o nome `cookies.txt`
+
+- Executar arquivo.
+
+
 ## Pré-requisitos
 
 - Python 3.6 ou superior
