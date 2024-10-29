@@ -1,6 +1,7 @@
 import yt_dlp
 import os
 import sys
+import re
 
 os.getcwd()
 
@@ -19,13 +20,19 @@ def my_hook(d):
 
 def validar_url(url):
     global total_videos
+    url_pattern = re.compile(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$')
+    if not url_pattern.match(url):
+        print("URL inválida: não corresponde ao formato esperado.")
+        return False
+    
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'ignoreerrors': True,
+        'default_search': 'ytsearch',
         'cookies': caminho_cookies,
     }
-    
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
             info = ydl.extract_info(url, download=False)
@@ -38,7 +45,31 @@ def validar_url(url):
             print("URL inválida ou conteúdo indisponível.")
             return False
         
+def validarTitle(titulo):
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'ignoreerrors': True,
+        'default_search': 'ytsearch',
+        'cookies': caminho_cookies,
+    }
 
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+
+            info_dict = ydl.extract_info(titulo, download=False)
+
+            if 'entries' in info_dict and info_dict['entries']:
+                video_info = info_dict['entries'][0]
+                print(f"Vídeo encontrado: {video_info['title']}")
+                return video_info
+            else:
+                print("Nenhum vídeo encontrado para o título fornecido.")
+                return None
+
+        except yt_dlp.utils.DownloadError as e:
+            print(f"Erro durante a busca: {e}")
+            return None
 
 def downloadAudio(url_download, output_path):
 
@@ -170,39 +201,113 @@ if __name__ == "__main__":
 
 
         if selectOption == '1':
+            print('\n---------------------------------------------------\n')
             print('\033[33;40m\nAudio Selecionado\n\033[m')
+            print('Digite 0 (zero) para retornar')
             url_Audio = input('Insira a url aqui: ')
+            if(url_Audio == '0'):
+                print("retornando...")
+                continue
+            if(url_Audio == ''):
+                print('Campo Vazio. retornando...')
+                continue
+
             print('Validando url...')
-            if validar_url(url_Audio):
-                print("\nIniciando download...")
-                downloadAudio(url_Audio, output_path)
+            validUrl = validar_url(url_Audio)
+            if validUrl:
+                baixar_arquivo = input('Iniciar download? S/N: ').lower()
+                if(baixar_arquivo == 's'):
+                    print("\nIniciando download...")
+                    downloadAudio(url_Audio, output_path)
+                else:
+                    print("Download cancelado.")
             else:
                 print("Falha na validação da URL. Verifique e tente novamente.")
+
         elif selectOption == '2':
+            print('\n---------------------------------------------------\n')
             print('\033[33;40m\nVídeo Selecionado\n\033[m')
+            print('Digite 0 (zero) para retornar')
             url_Video = str(input('Insira a url aqui: '))
+
+            if(url_Video == '0'):
+                print("retornando...")
+                continue
+            
+            if(url_Video == ''):
+                print('Campo Vazio. retornando...')
+                continue
+
             print('Validando url...')
             if validar_url(url_Video):
-                print("Iniciando download...")
-                downloadVideo(url_Video, output_path)
+                baixar_arquivo = input('Iniciar download? S/N: ').lower()
+                if(baixar_arquivo == 's'):
+                    print("Iniciando download...")
+                    downloadVideo(url_Video, output_path)
+                else:
+                    print("Download cancelado.")
             else:
                 print("Falha na validação da URL. Verifique e tente novamente.")
+
         elif selectOption == '3':
+            print('\n---------------------------------------------------\n')
             print('\033[33;40m\nPlaylist Selecionado\n\033[m')
+            print('Digite 0 (zero) para retornar')
             url_Playlist = str(input('Insira a url aqui: '))
+
+            if(url_Playlist == '0'):
+                print("retornando...")
+                continue
+
+            if(url_Playlist == ''):
+                print('Campo Vazio. retornando...')
+                continue
+
             print('Validando url...')
             if validar_url(url_Playlist):
-                print("Iniciando download da playlist...")
-                downloadPlaylist(url_Playlist, output_path)
+                baixar_arquivo = input('Iniciar download? S/N: ').lower()
+                if(baixar_arquivo == 's'):
+                    print("Iniciando download da playlist...")
+                    downloadPlaylist(url_Playlist, output_path)
+                else:
+                    print("Download cancelado.")
             else:
                 print("Falha na validação da URL. Verifique e tente novamente.")
+
         elif selectOption == '4':
+            print('\n---------------------------------------------------\n')
             print('\033[33;40m\nDownload por Título\n\033[m')
             print('Qual o nome do título do video que deseja baixar?')
+            print('Digite 0 (zero) para retornar')
+            
             buscar_video = str(input('Buscar por... : '))
-            baixar_por_titulo(buscar_video, output_path)
+            if(buscar_video == '0'):
+                print("retornando...")
+                continue
+            
+            if(buscar_video == ''):
+                print('Campo Vazio. retornando...')
+                continue
+
+            resultado = validarTitle(buscar_video)
+            
+            if resultado:
+                print(f"URL do vídeo encontrado: {resultado['webpage_url']}")
+                baixar_arquivo = input('Iniciar download? S/N: ').lower()
+                if(baixar_arquivo == 's'):
+                    print('iniciando download')
+                    baixar_por_titulo(buscar_video, output_path)
+                elif(baixar_arquivo == 'n'):
+                    print("Operação cancelada.")
+
         elif selectOption == '0':
-            condicao = False
-            print("\nPrograma encerrado.")
+            print('\n---------------------------------------------------\n')
+            encerrar = input('Deseja encerrar? S/N: ').lower()
+            if(encerrar == 's'):
+                condicao = False
+                print("\nPrograma encerrado.")
+            elif(encerrar == 'n'):
+                print("retornando...")
+                continue
         else:
             print("Opção inválida!")
