@@ -1,5 +1,4 @@
 import os
-import sys
 from yt_dlp import YoutubeDL
 
 def download_and_convert(url, output_path):
