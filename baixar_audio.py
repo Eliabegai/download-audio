@@ -2,6 +2,8 @@ import yt_dlp
 import os
 import sys
 import re
+import shutil
+
 
 os.getcwd()
 
@@ -185,17 +187,28 @@ def baixar_por_titulo(titulo, output_path):
     
     print("Download e conversão concluídos!")
 
+largura_terminal = shutil.get_terminal_size().columns
+
+
+menu_texto = '''
+    Selecione alguma opção abaixo \n
+    > Opção 0: Encerrar Programa
+    > Opção 1: Download Audio          (.mp3)
+    > Opção 2: Download Vídeo          (.mp4)
+    > Opção 3: Download Playlist       (.mp3)
+    > Opção 4: Buscar por Título       (.mp3)
+'''
+
 def headConsole():
-    print(text.center(80,'\033[33;40m\n\nDOWNLOAD AUDIO, VÍDEO E PLAYLIST DO YOUTUBE\n\033[m'))
-    print('\033[33;40m\n\nDOWNLOAD AUDIO, VÍDEO E PLAYLIST DO YOUTUBE\n\033[m')
-    print(
-    '''====================================================================
-    Opção 0: Encerrar Programa
-    Opção 1: Download Audio          (.mp3)
-    Opção 2: Download Vídeo          (.mp4)
-    Opção 3: Download PLaylist       (.mp3)
-    Opção 4: Buscar por Título       (.mp3)
-==================================================================== \n''')
+    print("=" * largura_terminal)
+    print()
+    print(('\033[33;40mDOWNLOAD AUDIO, VÍDEO E PLAYLIST DO YOUTUBE\033[m').center(largura_terminal, " "))
+    print()
+
+    print("=" * largura_terminal)
+    print("." * largura_terminal)
+    print(menu_texto)
+    print("." * largura_terminal)
 
 if __name__ == "__main__":
 
@@ -212,13 +225,12 @@ if __name__ == "__main__":
     while condicao:
 
         selectOption = input("Selecione uma Opção: " )
-        output_path = os.getcwd()  # Obtém o diretório atual
+        output_path = os.getcwd() 
         limpar_console()
         headConsole()
 
 
         if selectOption == '1':
-            # print('\n---------------------------------------------------\n')
             print('\033[33;40m\nAudio Selecionado\n\033[m')
             print('Digite 0 (zero) para retornar')
             url_Audio = input('Insira a url aqui: ')
@@ -309,7 +321,7 @@ if __name__ == "__main__":
                 print(f"URL do vídeo encontrado: {resultado['webpage_url']}")
                 baixar_arquivo = input('Iniciar download? S/N: ').lower()
                 if(baixar_arquivo == 's'):
-                    print('iniciando download')
+                    print('Iniciando download...')
                     baixar_por_titulo(buscar_video, output_path)
                 elif(baixar_arquivo == 'n'):
                     print("Operação cancelada.")

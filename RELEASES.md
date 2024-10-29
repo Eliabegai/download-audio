@@ -21,7 +21,7 @@
 ### Passos para Obter os Cookies do Navegador
 
 1. **Instale uma Extensão para Cookies:**
-   - No Chrome, você pode usar uma extensão como [EditThisCookie](https://chrome.google.com/webstore/detail/editthiscookie/).
+   - No Chrome, você pode usar uma extensão como [EditThisCookie](https://chromewebstore.google.com/detail/j2team-cookies/okpidcojinmlaakglciglbpcpajaibco).
    - No Firefox, você pode usar [Cookie Quick Manager](https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/).
 
 2. **Exporte os Cookies:**
