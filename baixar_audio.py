@@ -37,6 +37,7 @@ def validar_url(url):
         except yt_dlp.utils.DownloadError:
             print("URL inválida ou conteúdo indisponível.")
             return False
+        
 
 
 def downloadAudio(url_download, output_path):
@@ -114,13 +115,14 @@ def downloadPlaylist(url_download, output_path):
     
     print("Download e conversão concluídos!")
 
-def baixar_por_titulo(titulo):
-    output_folder = 'audios'
-    os.makedirs(output_folder, exist_ok=True)
+def baixar_por_titulo(titulo, output_path):
+    
+    audio_folder = os.path.join(output_path, 'audios')
+    os.makedirs(audio_folder, exist_ok=True)
     
     ydl_opts = {
         'format': 'bestaudio/best',
-        'outtmpl': os.path.join(output_folder, '%(title)s.%(ext)s'),
+        'outtmpl': os.path.join(audio_folder, '%(title)s.%(ext)s'),
         'default_search': 'ytsearch',
         'noplaylist': True,
         'ignoreerrors':True,
