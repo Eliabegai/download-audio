@@ -93,8 +93,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: "v${{ env.VERSION }}"  # Use a versão como tag
-        release_name: "Versão ${{ env.VERSION }}"
+        tag_name: "v${{ github.event.inputs.version }}"  # Use a versão como tag
+        release_name: "Versão ${{ github.event.inputs.version }}"
         draft: false
         prerelease: false
 
@@ -104,6 +104,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
-        asset_name: baixar-audio-windows-${{ env.VERSION }}.exe
+        asset_path: dist/windows/${{ github.event.inputs.version }}/baixar-audio-windows.exe
+        asset_name: baixar-audio-windows-${{ github.event.inputs.version }}.exe
         asset_content_type: application/octet-stream
