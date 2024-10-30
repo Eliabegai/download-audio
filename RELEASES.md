@@ -14,6 +14,9 @@
 - Necessário cookies logado no youtube para executar
 - Melhoria nos input de texto, fazendo validação de url e confirmação para iniciar download
 
+## Versão 2.1
+
+- Verificar se `FFmpeg` está instalado no computador executado. 
 
 
 ## Baixar os cookies do youtube
@@ -29,4 +32,3 @@
    - Use a extensão para exportar os cookies como um arquivo `.txt`. Certifique-se de incluir os cookies relacionados ao YouTube.
 
 
-	
