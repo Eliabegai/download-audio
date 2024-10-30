@@ -1,9 +1,9 @@
 name: Build and Release
 
 on:
-  push:
-    branches:
-      - main  # Executa no push para o branch principal
+  # push:
+  #   branches:
+  #     - main  # Executa no push para o branch principal
   workflow_dispatch:
       inputs:
         tipo:
