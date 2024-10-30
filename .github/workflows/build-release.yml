@@ -43,22 +43,36 @@ jobs:
       - name: Get Version
         id: get_version
         run: |
-          VERSION=$(cat VERSION)
+          VERSION= $(cat VERSION)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Upload VERSION artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: version
+          path: VERSION
 
   build-windows:
     needs: [version]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Download VERSION artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: version
+      - name: Read Version
+        id: read_version
+        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
       - name: Install dependencies
         run: pip install pyinstaller -r requirements.txt
-      - name: Build for Windows
-        run: python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows/$VERSION ./src/baixar_audio.py
+      - name: Build for Windows - Versão ${{ env.VERSION }}
+        run: python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows/${{ env.VERSION }} ./src/baixar_audio.py
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -70,14 +84,25 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Download VERSION artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: version
+
+      - name: Read Version
+        id: read_version
+        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
       - name: Install dependencies
         run: pip install pyinstaller -r requirements.txt
-      - name: Build for macOS
-        run: pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/$VERSION ./src/baixar_audio.py
+
+      - name: Build for macOS Versão ${{ env.VERSION }}
+        run: pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/${{ env.VERSION }} ./src/baixar_audio.py
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -88,22 +113,30 @@ jobs:
     needs: [version, build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
-    - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: "v${{ github.event.inputs.version }}"  # Use a versão como tag
-        release_name: "Versão ${{ github.event.inputs.version }}"
-        draft: false
-        prerelease: false
+      - name: Download VERSION artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: version
+      - name: Read Version
+        id: read_version
+        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+      - name: Create Release
+        uses: actions/create-release@v1
+      
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ env.VERSION }}"  # Use a versão como tag
+          release_name: "Versão ${{ env.VERSION }}"
+          draft: false
+          prerelease: false
 
-    - name: Upload Artifact to Release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist/windows/${{ github.event.inputs.version }}/baixar-audio-windows.exe
-        asset_name: baixar-audio-windows-${{ github.event.inputs.version }}.exe
-        asset_content_type: application/octet-stream
+      - name: Upload Artifact to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
+          asset_name: baixar-audio-windows-${{ env.VERSION }}.exe
+          asset_content_type: application/octet-stream
