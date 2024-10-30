@@ -63,3 +63,6 @@ jobs:
           # asset_path: dist/mac/${{ env.VERSION }}/baixar-audio-mac
           asset_name: baixar-audio-mac
           asset_content_type: application/octet-stream
+      - name: Debug Release Output
+        run: |
+          echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"
