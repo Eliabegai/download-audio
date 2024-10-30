@@ -1,0 +1,73 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main  # Executa no push para o branch principal
+  workflow_dispatch:
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Increment version
+        run: |
+          tipo_incremento="${{ github.event.inputs.tipo || 'patch' }}"
+          python bump_version.py <<< "$tipo_incremento"
+
+      - name: Commit new version
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION
+          git commit -m "Atualiza versão para $(cat VERSION)"
+          git push
+
+jobs:
+  build-windows:
+    needs: [version]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install pyinstaller -r requirements.txt
+      - name: Build for Windows
+        run: python -m PyInstaller --onefile --name=baixar-audio-windows ./src/baixar_audio.py
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-executable
+          path: dist/windows/baixar-audio-windows.exe
+
+  build-macos:
+    needs: [version]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install pyinstaller -r requirements.txt
+      - name: Build for macOS
+        run: pyinstaller --onefile --name=baixar-audio-mac ./src/baixar_audio.py
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos-executable
+          path: dist/mac/baixar-audio-mac

@@ -4,3 +4,5 @@
 build
 *.spec
 cookies.txt
+teste.py
+__pycache__

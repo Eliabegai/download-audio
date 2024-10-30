@@ -88,7 +88,12 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     - Required `pyinstaller`
 
     ```bash
-    pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/2_0 baixar_audio.py
+    pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/2_1 ./src/baixar_audio.py
+    ```
+
+    - permissão para rodar no mac
+    ```bash
+    chmod +x pasta_atual/baixar-audio-mac
     ```
 
    **/dist/mac**
@@ -97,7 +102,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 5. **Criar Executável Windows**
     - Required `pyinstaller`
     ```bash
-    python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows/2_0 baixar_audio.py
+    python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows/2_1 ./src/baixar_audio.py
     ``` 
 
     **/dist/windows**
