@@ -43,7 +43,7 @@ jobs:
       - name: Get Version
         id: get_version
         run: |
-          VERSION= $(cat VERSION)
+          VERSION=$(cat VERSION)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Upload VERSION artifact
