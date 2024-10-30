@@ -41,7 +41,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     Abra o terminal e navegue até o diretório do projeto. Em seguida, execute o comando:
 
     ```bash
-    pip install yt_dlp pyinstaller
+    pip install yt_dlp pyinstaller colorama
     ```
 
 3. **Verifique e configure o `ffmpeg`:**
@@ -88,7 +88,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     - Required `pyinstaller`
 
     ```bash
-    pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac baixar_audio.py
+    pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/2_0 baixar_audio.py
     ```
 
    **/dist/mac**
