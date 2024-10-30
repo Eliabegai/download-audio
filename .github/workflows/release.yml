@@ -42,6 +42,9 @@ jobs:
     needs: [release]
     runs-on: ubuntu-latest
     steps:
+      - name: Debug Release Output
+        run: |
+          echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"
       - name: Upload Windows Executable to Release
         uses: actions/upload-release-asset@v1
         env:
@@ -52,9 +55,6 @@ jobs:
           # asset_path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
           asset_name: baixar-audio-windows.exe
           asset_content_type: application/octet-stream
-      - name: Debug Release Output
-        run: |
-          echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"
 
       - name: Upload macOS Executable to Release
         uses: actions/upload-release-asset@v1
