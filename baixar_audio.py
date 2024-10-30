@@ -4,6 +4,8 @@ import sys
 import re
 import shutil
 from colorama import Fore, Back, Style, init
+import subprocess
+
 
 os.getcwd()
 init(autoreset=True)
@@ -13,7 +15,6 @@ current_video = 0
 caminho_cookies = f"{os.getcwd()}/cookies.txt"
 
 def limpar_console():
-    # Verifica o sistema operacional e executa o comando apropriado
     if os.name == 'nt':  # Windows
         os.system('cls')
     else:  # Linux e macOS
@@ -82,6 +83,18 @@ def validarTitulo(titulo):
         except yt_dlp.utils.DownloadError as e:
             print(f"Erro durante a busca: {e}")
             return None
+
+def verificar_ffmpeg():
+    try:
+        subprocess.run(['ffmpeg', '-version'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return True
+    except subprocess.CalledProcessError:
+        print(f'{Fore.BLUE}{Back.BLACK}FFmpeg está instalado, mas ocorreu um erro.{Style.RESET_ALL}')
+        return False
+    except FileNotFoundError:
+        print(f'{Fore.BLUE}{Back.BLACK}FFmpeg não está instalado ou não está no PATH.{Style.RESET_ALL}')
+        
+        return False
 
 def downloadAudio(url_download, output_path):
 
@@ -219,8 +232,14 @@ if __name__ == "__main__":
     if os.path.exists(caminho_cookies):
         print(f'{Fore.YELLOW}{Back.BLACK}Arquivo de cookies encontrado.{Style.RESET_ALL}')
     else:
-        print(f"Não encontrado arquivo {Fore.YELLOW}{Back.BLACK}coockies.txt{Style.RESET_ALL} na pasta executada.")
-        sys.exit(1) 
+        print(f"Não encontrado arquivo {Fore.RED}{Back.BLACK}coockies.txt{Style.RESET_ALL} na pasta executada.")
+        sys.exit(1)
+    
+    if verificar_ffmpeg():
+        print(f'{Fore.YELLOW}{Back.BLACK}FFmpeg instalado.{Style.RESET_ALL}')
+    else:
+        print(f'{Fore.RED}{Back.BLACK}Por favor, instale o FFmpeg para prosseguir.{Style.RESET_ALL}')
+        sys.exit(1)
 
     headConsole()
 
