@@ -65,7 +65,8 @@ jobs:
           
       - name: Read Version
         id: read_version
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+        run: |
+          for /F "tokens=*" %%i in (VERSION) do echo "VERSION=%%i" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -94,7 +95,9 @@ jobs:
 
       - name: Read Version
         id: read_version
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+        run: |
+          VERSION=$(cat VERSION)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -119,12 +122,15 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: version
+          
       - name: Read Version
         id: read_version
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+        run: |
+          VERSION=$(cat VERSION)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Create Release
         uses: actions/create-release@v1
-      
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
