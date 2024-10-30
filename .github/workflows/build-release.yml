@@ -65,8 +65,11 @@ jobs:
           
       - name: Read Version
         id: read_version
+        shell: cmd
         run: |
-           cmd /c "for /F \"tokens=*\" %i in (VERSION) do @echo VERSION=%i >> %GITHUB_ENV%"
+          for /F "tokens=*" %%i in (VERSION) do (
+            echo VERSION=%%i >> %GITHUB_ENV%
+          )
 
       - name: Set up Python
         uses: actions/setup-python@v2
