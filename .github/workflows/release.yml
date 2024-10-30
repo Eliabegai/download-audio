@@ -7,9 +7,8 @@ on:
   workflow_dispatch:
       inputs:
         tipo:
-          description: "Tipo de incremento de versão (major, minor, patch)"
+          description: "Criar release"
           required: false
-          default: "patch"
 
 jobs:
  release:
