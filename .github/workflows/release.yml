@@ -47,24 +47,29 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
   release:
-    needs: [version]
     runs-on: ubuntu-latest
+
     steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
       - name: Create Release
+        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "v$VERSION"  # Use a versão como tag
-          release_name: "Versão $VERSION"
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: "Release ${{ github.event.inputs.version }}"
           draft: false
           prerelease: false
+
       - name: Upload Artifact to Release
         uses: actions/upload-release-asset@v1
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: dist/windows/$VERSION/baixar-audio-windows.exe
-            asset_name: baixar-audio-windows-$VERSION.exe
-            asset_content_type: application/octet-stream
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/baixar-audio  # Caminho do arquivo gerado pelo PyInstaller
+          asset_name: baixar-audio-${{ github.event.inputs.version }}.exe  # Nome do arquivo no release
+          # asset_content_type: application/octet-stream
