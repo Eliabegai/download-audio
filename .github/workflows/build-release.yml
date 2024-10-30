@@ -158,7 +158,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           # asset_path: dist/windows/2.0.14/baixar-audio-windows.exe
-          asset_path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
+          asset_path: ./dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
           asset_name: baixar-audio-windows.exe
           asset_content_type: application/octet-stream
 
@@ -169,6 +169,6 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           # asset_path: dist/mac/2.0.14/baixar-audio-mac
-          asset_path: dist/mac/${{ env.VERSION }}/baixar-audio-mac
+          asset_path: ./dist/mac/${{ env.VERSION }}/baixar-audio-mac
           asset_name: baixar-audio-mac
           asset_content_type: application/octet-stream
