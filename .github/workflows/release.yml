@@ -14,24 +14,26 @@ jobs:
   release:
       runs-on: ubuntu-latest
       steps:
-        - name: Download VERSION artifact
-          uses: actions/download-artifact@v4
-          with:
-            name: version
+        # - name: Download VERSION artifact
+        #   uses: actions/download-artifact@v4
+        #   with:
+        #     name: version
             
-        - name: Read Version
-          id: read_version
-          run: |
-            VERSION=$(cat VERSION)
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
+        # - name: Read Version
+        #   id: read_version
+        #   run: |
+        #     VERSION=$(cat VERSION)
+        #     echo "VERSION=$VERSION" >> $GITHUB_ENV
 
         - name: Create Release
           uses: actions/create-release@v1
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
-            tag_name: "v${{ env.VERSION }}"  # Use a versão como tag
-            release_name: "Versão ${{ env.VERSION }}"
+            tag_name: "v2.0.14"  # Use a versão como tag
+            # tag_name: "v${{ env.VERSION }}"  # Use a versão como tag
+            release_name: "Versão 2.0.14"
+            # release_name: "Versão ${{ env.VERSION }}"
             draft: false
             prerelease: false
     
@@ -45,7 +47,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
+          asset_path: dist/windows/2.0.14/baixar-audio-windows.exe
+          # asset_path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
           asset_name: baixar-audio-windows.exe
           asset_content_type: application/octet-stream
 
@@ -55,6 +58,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/mac/${{ env.VERSION }}/baixar-audio-mac
+          asset_path: dist/mac/2.0.14/baixar-audio-mac
+          # asset_path: dist/mac/${{ env.VERSION }}/baixar-audio-mac
           asset_name: baixar-audio-mac
           asset_content_type: application/octet-stream
