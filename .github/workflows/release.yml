@@ -10,7 +10,7 @@ on:
           description: "Criar release"
           required: false
 
-  jobs:
+jobs:
   release:
       runs-on: ubuntu-latest
       steps:
