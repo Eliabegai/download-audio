@@ -22,6 +22,13 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 ---
 ## Instalação
 
+- Baixe os cookies do youtube com sua conta logada para facilitar o processo de download e também poder baixar playlist privada.
+
+- Salvar o arquivo no mesmo caminho do executável com o nome `cookies.txt`
+
+- Executar arquivo.
+
+
 ## Pré-requisitos
 
 - Python 3.6 ou superior
@@ -34,7 +41,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     Abra o terminal e navegue até o diretório do projeto. Em seguida, execute o comando:
 
     ```bash
-    pip install yt_dlp pyinstaller
+    pip install yt_dlp pyinstaller colorama
     ```
 
 3. **Verifique e configure o `ffmpeg`:**
@@ -81,7 +88,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     - Required `pyinstaller`
 
     ```bash
-    pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac baixar_audio.py
+    pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/2_0 baixar_audio.py
     ```
 
    **/dist/mac**
@@ -90,7 +97,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 5. **Criar Executável Windows**
     - Required `pyinstaller`
     ```bash
-    python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows baixar_audio.py
+    python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows/2_0 baixar_audio.py
     ``` 
 
     **/dist/windows**
