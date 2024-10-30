@@ -5,6 +5,11 @@ on:
     branches:
       - main  # Executa no push para o branch principal
   workflow_dispatch:
+      inputs:
+        tipo:
+          description: "Tipo de incremento de versão (major, minor, patch)"
+          required: false
+          default: "patch"
 
 jobs:
   version:
@@ -92,6 +97,7 @@ jobs:
         release_name: "Versão ${{ env.VERSION }}"
         draft: false
         prerelease: false
+
     - name: Upload Artifact to Release
       uses: actions/upload-release-asset@v1
       env:

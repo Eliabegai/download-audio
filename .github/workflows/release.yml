@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main  # Executa no push para o branch principal
+  workflow_dispatch:
+      inputs:
+        tipo:
+          description: "Tipo de incremento de versão (major, minor, patch)"
+          required: false
+          default: "patch"
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+          python-version: '3.x'
+        
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+      
+    - name: Increment version
+      run: |
+          tipo_incremento="${{ github.event.inputs.tipo || 'patch' }}"
+          python bump_version.py <<< "$tipo_incremento"
+
+    - name: Commit new version
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION
+          git commit -m "Atualiza versão para $(cat VERSION)"
+          git push origin main
+
+    - name: Get Version
+      id: get_version
+      run: |
+          VERSION=$(cat VERSION)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+  release:
+    needs: [version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v$VERSION"  # Use a versão como tag
+          release_name: "Versão $VERSION"
+          draft: false
+          prerelease: false
+      - name: Upload Artifact to Release
+        uses: actions/upload-release-asset@v1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            asset_path: dist/windows/$VERSION/baixar-audio-windows.exe
+            asset_name: baixar-audio-windows-$VERSION.exe
+            asset_content_type: application/octet-stream
