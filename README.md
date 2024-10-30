@@ -91,6 +91,11 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/2_1 ./src/baixar_audio.py
     ```
 
+    - permissão para rodar no mac
+    ```bash
+    chmod +x pasta_atual/baixar-audio-mac
+    ```
+
    **/dist/mac**
    > Arquivo executável para download dos audios.
 

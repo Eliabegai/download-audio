@@ -256,7 +256,7 @@ if __name__ == "__main__":
     while condicao:
 
         selectOption = input("Selecione uma Opção: " )
-        output_path = os.getcwd() 
+        output_path = diretorio_base 
         limpar_console()
         headConsole()
 
