@@ -53,9 +53,7 @@ jobs:
       - name: Install dependencies
         run: pip install pyinstaller -r requirements.txt
       - name: Build for Windows
-        # run: python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows/$VERSION ./src/baixar_audio.py
-        run: python -m PyInstaller --onefile --name=baixar-audio-windows ./src/baixar_audio.py
-          mv dist/windows/baixar-audio-windows.exe dist/windows/$VERSION/baixar-audio-windows.exe
+        run: python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows/$VERSION ./src/baixar_audio.py
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -74,9 +72,7 @@ jobs:
       - name: Install dependencies
         run: pip install pyinstaller -r requirements.txt
       - name: Build for macOS
-        # run: pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/$VERSION ./src/baixar_audio.py
-        run: pyinstaller --onefile --name=baixar-audio-mac ./src/baixar_audio.py
-          mv dist/baixar-audio-mac dist/mac/$VERSION/baixar-audio-mac
+        run: pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/$VERSION ./src/baixar_audio.py
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
