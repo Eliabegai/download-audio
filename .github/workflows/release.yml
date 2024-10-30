@@ -5,10 +5,10 @@ on:
   #   branches:
   #     - main  # Executa no push para o branch principal
   workflow_dispatch:
-      inputs:
-        tipo:
-          description: "Criar release"
-          required: false
+    inputs:
+      tipo:
+        description: "Criar release"
+        required: false
 
 jobs:
   release:
@@ -35,26 +35,26 @@ jobs:
             draft: false
             prerelease: false
     
-    upload_artifact:
-      needs: [release]
-      runs-on: ubuntu-latest
-      steps:
-        - name: Upload Windows Executable to Release
-          uses: actions/upload-release-asset@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
-            asset_name: baixar-audio-windows.exe
-            asset_content_type: application/octet-stream
+  upload_artifact:
+    needs: [release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload Windows Executable to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
+          asset_name: baixar-audio-windows.exe
+          asset_content_type: application/octet-stream
 
-        - name: Upload macOS Executable to Release
-          uses: actions/upload-release-asset@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: dist/mac/${{ env.VERSION }}/baixar-audio-mac
-            asset_name: baixar-audio-mac
-            asset_content_type: application/octet-stream
+      - name: Upload macOS Executable to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/mac/${{ env.VERSION }}/baixar-audio-mac
+          asset_name: baixar-audio-mac
+          asset_content_type: application/octet-stream
