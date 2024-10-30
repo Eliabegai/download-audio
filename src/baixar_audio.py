@@ -13,7 +13,16 @@ init(autoreset=True)
 
 total_videos = 0
 current_video = 0
-caminho_cookies = f"{os.getcwd()}/cookies.txt"
+
+# Caminho da pasta onde o executável está localizado
+if getattr(sys, 'frozen', False):
+    # Quando o script está "congelado" pelo PyInstaller
+    diretorio_base = os.path.dirname(sys.executable)
+else:
+    # Quando o script está sendo executado normalmente
+    diretorio_base = os.path.dirname(os.path.abspath(__file__))
+
+caminho_cookies = os.path.join(diretorio_base, 'cookies.txt')
 
 def limpar_console():
     if os.name == 'nt':  # Windows
@@ -233,7 +242,7 @@ if __name__ == "__main__":
     if os.path.exists(caminho_cookies):
         print(f'{Fore.YELLOW}{Back.BLACK}Arquivo de cookies encontrado.{Style.RESET_ALL}')
     else:
-        print(f"Não encontrado arquivo {Fore.RED}{Back.BLACK}coockies.txt{Style.RESET_ALL} na pasta executada.")
+        print(f"Não encontrado arquivo {Fore.RED}{Back.BLACK}cookies.txt{Style.RESET_ALL} na pasta executada.")
         sys.exit(1)
     
     if verificar_ffmpeg():
