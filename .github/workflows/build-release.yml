@@ -9,7 +9,7 @@ on:
         tipo:
           description: "Tipo de incremento de versão (major, minor, patch)"
           required: false
-          default: "patch"
+          default: "minor"
 
 jobs:
   version:
@@ -146,14 +146,19 @@ jobs:
           release_name: "Versão ${{ env.VERSION }}"
           draft: false
           prerelease: false
+      - name: Debug Release Output
+        run: |
+          echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"
 
   upload_artifact:
     needs: [release]
     runs-on: ubuntu-latest
     steps:
+
       - name: Debug Release Output
         run: |
           echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"
+      
       - name: Upload Windows Executable to Release
         uses: actions/upload-release-asset@v1
         env:
@@ -175,6 +180,3 @@ jobs:
           # asset_path: dist/mac/${{ env.VERSION }}/baixar-audio-mac
           asset_name: baixar-audio-mac
           asset_content_type: application/octet-stream
-      - name: Debug Release Output
-        run: |
-          echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"
