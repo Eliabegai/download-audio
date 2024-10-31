@@ -125,10 +125,22 @@ jobs:
     needs: [version, build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifact
+      - name: Download version artifact
         uses: actions/download-artifact@v4
         with:
           name: version
+
+      - name: Download Windows Executable
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-executable
+          path: ./dist/windows/${{ env.VERSION }}
+
+      - name: Download macOS Executable
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-executable
+          path: ./dist/mac/${{ env.VERSION }}
           
       - name: Read Version
         id: read_version
@@ -136,17 +148,11 @@ jobs:
           VERSION=$(cat VERSION)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       
-      - name: Read Windows Executavel
-        id: read_windows_executable
-        run: |
-          EXEC_WINDOWS=$(cat windows-executable)
-          echo "EXEC_WINDOWS=$./dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe" >> $GITHUB_ENV
+      - name: Set Windows Executable Path
+        run: echo "EXEC_WINDOWS=./dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe" >> $GITHUB_ENV
 
-      - name: Read macOS Executavel
-        id: read_macos_executable
-        run: |
-          EXEC_MACOS=$(cat windows-executable)
-          echo "EXEC_MACOS=$./dist/mac/${{ env.VERSION }}/baixar-audio-mac" >> $GITHUB_ENV
+      - name: Set macOS Executable Path
+        run: echo "EXEC_MACOS=./dist/mac/${{ env.VERSION }}/baixar-audio-mac" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
