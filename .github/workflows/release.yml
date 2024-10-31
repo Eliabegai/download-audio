@@ -16,25 +16,33 @@ jobs:
     steps:
       - name: Debug Release Output
         run: |
-          echo "Upload URL: https://uploads.github.com/repos/Eliabegai/download-audio/releases/182817298/assets{?name,label}}"
-      - name: Upload Windows Executable to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "Tentar coletar os artefatos..."
+        
+      - name: Download version artifact
+        uses: actions/download-artifact@v4
         with:
-          upload_url: https://uploads.github.com/repos/Eliabegai/download-audio/releases/182817298/assets{?name,label}
-          asset_path: ./dist/windows/2.4.0/baixar-audio-windows
-          # asset_path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
-          asset_name: baixar-audio-windows.exe
-          asset_content_type: application/octet-stream
+          name: version
 
-      - name: Upload macOS Executable to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download Windows Executable
+        uses: actions/download-artifact@v4
         with:
-          upload_url: https://uploads.github.com/repos/Eliabegai/download-audio/releases/182817298/assets{?name,label}
-          asset_path: ./dist/mac/2.4.0/baixar-audio-mac
-          # asset_path: dist/mac/${{ env.VERSION }}/baixar-audio-mac
-          asset_name: baixar-audio-mac
-          asset_content_type: application/octet-stream
+          name: windows-executable
+          path: ./dist/windows/2.8.0
+
+      - name: Download macOS Executable
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-executable
+          path: ./dist/mac/2.8.0
+          
+      - name: Read Version
+        id: read_version
+        run: |
+          VERSION=$(cat VERSION)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      
+      - name: Set Windows Executable Path
+        run: echo "EXEC_WINDOWS=./dist/windows/2.8.0/baixar-audio-windows.exe" >> $GITHUB_ENV
+
+      - name: Set macOS Executable Path
+        run: echo "EXEC_MACOS=./dist/mac/2.8.0/baixar-audio-mac" >> $GITHUB_ENV
