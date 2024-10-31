@@ -83,11 +83,12 @@ jobs:
         run: pip install pyinstaller -r requirements.txt
       - name: Build for Windows - Versão ${{ env.VERSION }}
         run: python -m PyInstaller --onefile --name=baixar-audio-windows --distpath ./dist/windows/${{ env.VERSION }} ./src/baixar_audio.py
+      
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-executable
-          path: dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
+          path: ./dist/windows/${{ env.VERSION }}/baixar-audio-windows.exe
 
   build-macos:
     needs: [version]
