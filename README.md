@@ -9,29 +9,48 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
 # Download
 
 ### Mac
-[Baixar Executável](dist/mac/baixar-audio-mac)
+[Baixar Executável](dist/mac/2_1/baixar-audio-mac)
 
 ### Windows
-[Baixar Executável](dist/windows/baixar-audio-windows.exe)
+[Baixar Executável](dist/windows/2_0/baixar-audio-windows.exe)
 
 ---
 ## Featured Features
-1. Selecionar opções como `.mp3`, `.wav`, `.mp4`, entre outros;
-2. Force installation `ffmpeg` caso não tenha no computador. Windows ou Mac 
-
+1. [x] Selecionar opções como `.mp3`, `.wav`, `.mp4`, entre outros;
+2. [ ] Force installation `ffmpeg` caso não tenha no computador. Windows ou Mac;
+3. [ ] Opção para alterar o nome do arquivo baixado;
+4. [ ] Opção para usar sem os cookies, colocar um alerta falando que pode ser necessário do arquivo para baixar certas músicas ou playlists;
+5. [ ] Monitorar a pasta se foi adicionado o arquivo `coockies.txt;
+ 
 ---
 ## Instalação
 
 - Baixe os cookies do youtube com sua conta logada para facilitar o processo de download e também poder baixar playlist privada.
-
 - Salvar o arquivo no mesmo caminho do executável com o nome `cookies.txt`
-
 - Executar arquivo.
 
 
+## Uso
+
+1. **Execute o script Python:**
+    
+    Selecione uma das opções de download
+    ![Tela Principal](assets/tela_principal.png) 
+
+
+
+2. **Insira a URL do vídeo do YouTube:**
+
+    Exemplo: Opção 1: **Áudio**
+    ![Selecionado Audio](assets/select_audio.png)
+
+3.
+
+---
+
 ## Pré-requisitos
 
-- Python 3.6 ou superior
+- Python 3.10 ou superior
 - `pip` (gerenciador de pacotes Python)
 
 1. **Clone o repositório ou faça o download dos arquivos do projeto.**
@@ -41,7 +60,7 @@ No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opç
     Abra o terminal e navegue até o diretório do projeto. Em seguida, execute o comando:
 
     ```bash
-    pip install yt_dlp pyinstaller colorama
+        pip install -r requirements.txt
     ```
 
 3. **Verifique e configure o `ffmpeg`:**
