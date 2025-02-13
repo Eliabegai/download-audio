@@ -17,7 +17,7 @@ jobs:
 
     steps:
     - name: Checkout do repositório
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
     - name: Criar pasta
       run: mkdir -p minha_pasta
@@ -31,7 +31,7 @@ jobs:
       run: zip -r minha_pasta.zip minha_pasta
 
     - name: Fazer upload do arquivo compactado
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: minha_pasta
         path: minha_posta.zip
