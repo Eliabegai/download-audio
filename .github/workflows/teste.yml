@@ -23,8 +23,8 @@ jobs:
       run: mkdir -p minha_pasta
 
     - name: Criar arquivo executável
-      run: echo "#!/bin/bash" > minha_pasta/meu_script.sh && \
-           echo "echo 'Olá, mundo!'" >> minha_pasta/meu_script.sh && \
+      run: echo "#!/bin/bash" > minha_pasta/meu_script.sh
+           echo "echo 'Olá, mundo!'" >> minha_pasta/meu_script.sh
            chmod +x minha_pasta/meu_script.sh
 
     - name: Compactar a pasta
