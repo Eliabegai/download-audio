@@ -1,9 +1,9 @@
-name: Teste Artefato
+name: Criar Pasta e Arquivo Executável
 
 on:
-  # push:
-  #   branches:
-  #     - main  # Executa no push para o branch principal
+#   push:
+#     branches:
+#       - main  # Executa quando há um push para a branch main
   workflow_dispatch:
       inputs:
         tipo:
@@ -12,10 +12,26 @@ on:
           default: "minor"
 
 jobs:
-  teste:
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
 
-      - name: Display estrutura de pasta
-        run: ls -R
+    steps:
+    - name: Checkout do repositório
+      uses: actions/checkout@v3
+
+    - name: Criar pasta
+      run: mkdir -p minha_pasta
+
+    - name: Criar arquivo executável
+      run: echo "#!/bin/bash" > minha_pasta/meu_script.sh && \
+           echo "echo 'Olá, mundo!'" >> minha_pasta/meu_script.sh && \
+           chmod +x minha_pasta/meu_script.sh
+
+    - name: Compactar a pasta
+      run: zip -r minha_pasta.zip minha_pasta
+
+    - name: Fazer upload do arquivo compactado
+      uses: actions/upload-artifact@v3
+      with:
+        name: minha_pasta
+        path: minha_posta.zip
