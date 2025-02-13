@@ -34,4 +34,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: minha_pasta
-        path: minha_posta.zip
+        path: minha_pasta.zip
