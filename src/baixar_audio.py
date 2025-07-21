@@ -6,6 +6,9 @@ import shutil
 from colorama import Fore, Back, Style, init
 import subprocess
 from instalar_FFmpeg import instalar_ffmpeg
+from audio import downloadAudio as teste
+from validate import validar_url
+from hooks import status_downloading
 
 
 os.getcwd()
@@ -29,42 +32,6 @@ def limpar_console():
         os.system('cls')
     else:  # Linux e macOS
         os.system('clear')
-
-def my_hook(d):
-    global current_video
-
-    if d['status'] == 'finished':
-        current_video += 1
-        print(f" -> Download concluído: {current_video}/{total_videos}")
-    # elif d['status'] == 'downloading':
-    #     print(f" ... Baixando vídeo {current_video + 1}/{total_videos}: {d['_percent_str']} concluído")
-
-
-def validar_url(url):
-    global total_videos
-    url_pattern = re.compile(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$')
-    if not url_pattern.match(url):
-        print("URL inválida: não corresponde ao formato esperado.")
-        return False
-    
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'ignoreerrors': True,
-        'cookies': caminho_cookies,
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        try:
-            info = ydl.extract_info(url, download=False)
-            print("URL válida! Título:", info.get("title", "Título desconhecido"))
-            if 'entries' in info:
-                total_videos = len(info['entries'])
-                print(f"Total de vídeos na playlist: {total_videos}")
-            return True
-        except yt_dlp.utils.DownloadError:
-            print("URL inválida ou conteúdo indisponível.")
-            return False
         
 def validarTitulo(titulo):
     global total_videos
@@ -106,32 +73,6 @@ def verificar_ffmpeg():
         instalar_ffmpeg()
         return False
 
-def downloadAudio(url_download, output_path):
-
-    audio_folder = os.path.join(output_path, 'audios')
-    os.makedirs(audio_folder, exist_ok=True)
-
-
-    ydl_opts = {
-    'format': 'bestaudio/best',
-    'outtmpl': os.path.join(audio_folder, '%(title)s.%(ext)s'),
-    'noplaylist': True,
-    'cookies': caminho_cookies,
-    'progress_hooks': [my_hook],                    # Função de hook para monitorar progresso
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '192',
-    }],
-    'nooverwrites': True,
-    'quiet': True,
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url_download])
-    
-    print("Download e conversão concluídos!")
-
 def downloadVideo(url_download, output_path):
 
     audio_folder = os.path.join(output_path, 'audios')
@@ -143,7 +84,7 @@ def downloadVideo(url_download, output_path):
         'noplaylist': True,
         'cookies': caminho_cookies,
         'merge_output_format': 'mp4',
-        'progress_hooks': [my_hook],                    # Função de hook para monitorar progresso
+        'progress_hooks': [status_downloading],                    # Função de hook para monitorar progresso
         'nooverwrites': True,
         'quiet': True,
     }
@@ -167,7 +108,7 @@ def downloadPlaylist(url_download, output_path):
     'noplaylist': False,
     'cookies': caminho_cookies,
     'extractaudio': True,
-    'progress_hooks': [my_hook],                    # Função de hook para monitorar progresso
+    'progress_hooks': [status_downloading],                    # Função de hook para monitorar progresso
     'ignoreerrors': True,
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
@@ -194,7 +135,7 @@ def baixar_por_titulo(titulo, output_path):
         'default_search': 'ytsearch',
         'noplaylist': True,
         'ignoreerrors':True,
-        'progress_hooks': [my_hook],                    # Função de hook para monitorar progresso
+        'progress_hooks': [status_downloading],                    # Função de hook para monitorar progresso
         'cookies': caminho_cookies,
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
@@ -211,29 +152,27 @@ def baixar_por_titulo(titulo, output_path):
     
     print("Download e conversão concluídos!")
 
-largura_terminal = shutil.get_terminal_size().columns
+# largura_terminal = (shutil.get_terminal_size().columns - 10)
+# largura_terminal_title = shutil.get_terminal_size().columns
+largura_terminal = 85
+largura_terminal_title = 95
 
 tituloDownload = f'{Fore.YELLOW}{Back.BLACK}DOWNLOAD AUDIO, VÍDEO E PLAYLIST DO YOUTUBE{Style.RESET_ALL}'
 
 menu_texto = '''
     Selecione alguma opção abaixo \n
     > Opção 0: Encerrar Programa
-    > Opção 1: Download Audio          (.mp3)
-    > Opção 2: Download Vídeo          (.mp4)
-    > Opção 3: Download Playlist       (.mp3)
-    > Opção 4: Buscar por Título       (.mp3)
+    > Opção 1: Download do Audio          (.mp3)
+    > Opção 2: Download do Vídeo          (.mp4)
+    > Opção 3: Download da Playlist       (.mp3)
+    > Opção 4: Buscar por Título          (.mp3)
 '''
 
 def headConsole():
     print("=" * largura_terminal)
-    print()
-    print(tituloDownload.center(largura_terminal, " "))
-    print()
-
+    print("\n", tituloDownload.center(largura_terminal_title, " "), "\n")
     print("=" * largura_terminal)
-    print("." * largura_terminal)
     print(menu_texto)
-    print("." * largura_terminal)
 
 if __name__ == "__main__":
 
@@ -242,8 +181,9 @@ if __name__ == "__main__":
     if os.path.exists(caminho_cookies):
         print(f'{Fore.YELLOW}{Back.BLACK}Arquivo de cookies encontrado.{Style.RESET_ALL}')
     else:
-        print(f"Não encontrado arquivo {Fore.RED}{Back.BLACK}cookies.txt{Style.RESET_ALL} na pasta executada.")
-        sys.exit(1)
+        print(f"Não encontrado arquivo {Fore.RED}{Back.BLACK}cookies.txt{Style.RESET_ALL} na pasta executada.\nPara alguns downloads pode ser necessário o arquivo.")
+    
+    print(f'{Fore.YELLOW}{Back.BLACK}Verificando FFmpeg...{Style.RESET_ALL}')
     
     if verificar_ffmpeg():
         print(f'{Fore.YELLOW}{Back.BLACK}FFmpeg instalado.{Style.RESET_ALL}')
@@ -255,30 +195,44 @@ if __name__ == "__main__":
 
     while condicao:
 
-        selectOption = input("Selecione uma Opção: " )
+        selectOption = input("Selecione uma opção: > " )
         output_path = diretorio_base 
         limpar_console()
         headConsole()
 
-
         if selectOption == '1':
-            print(f'{Fore.YELLOW}{Back.BLACK}\nAudio Selecionado\n{Style.RESET_ALL}')
+            print(f'{Fore.YELLOW}{Back.BLACK}\nBaixar audio selecionado\n{Style.RESET_ALL}')
             print('Digite 0 (zero) para retornar')
             url_Audio = input('Insira a url aqui: ')
             if(url_Audio == '0'):
                 print("retornando...")
                 continue
             if(url_Audio == ''):
-                print('Campo Vazio. retornando...')
+                print('Campo vazio. retornando...')
                 continue
 
             print('Validando url...')
-            validUrl = validar_url(url_Audio)
+            validUrl, titulo_audio = validar_url(url_Audio)
             if validUrl:
-                baixar_arquivo = input('Iniciar download? S/N: ').lower()
+                baixar_arquivo = input(f'Deseja baixar o audio "{titulo_audio}"? S/N: ').lower()
                 if(baixar_arquivo == 's'):
                     print("\nIniciando download...")
-                    downloadAudio(url_Audio, output_path)
+
+                    # Baixar na pasta temporária
+                    temp_path = os.path.join(output_path, 'temp')
+                    downloaded_file_path = teste(url_Audio, temp_path, return_filepath=True)
+                    # downloadAudio(url_Audio, output_path)
+
+                    confirm = input('Esse é o áudio correto? S/N: ').lower()
+
+                    if confirm == 's':
+                        final_folder = os.path.join(output_path, 'audios')
+                        os.makedirs(final_folder, exist_ok=True)
+                        shutil.move(downloaded_file_path, os.path.join(final_folder, os.path.basename(downloaded_file_path)))
+                        print("Arquivo confirmado e movido para a pasta final!")
+                    else:
+                        os.remove(downloaded_file_path)
+                        print("Arquivo deletado. Você pode tentar novamente.")
                 else:
                     print("Download cancelado.")
             else:
