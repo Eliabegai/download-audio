@@ -7,5 +7,5 @@ cookies.txt
 teste.py
 __pycache__
 
-/src/audios
+/src/downloads/*
 /src/temp

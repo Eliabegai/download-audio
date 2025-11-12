@@ -6,13 +6,14 @@ def validar_url(url, path_cookies=None):
     url_pattern = re.compile(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$')
     if not url_pattern.match(url):
         print("URL inválida: não corresponde ao formato esperado.")
-        return False, None
+        return False
     
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'ignoreerrors': True,
         'cookies': path_cookies,
+        'extract_flat': 'in_playlist'
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -26,4 +27,4 @@ def validar_url(url, path_cookies=None):
             return True, titulo
         except yt_dlp.utils.DownloadError:
             print("URL inválida ou conteúdo indisponível.")
-            return False, None
+            return False
