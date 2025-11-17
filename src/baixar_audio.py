@@ -4,7 +4,6 @@ import sys
 import shutil
 from colorama import Fore, Back, Style, init
 import subprocess
-from instalar_FFmpeg import instalar_ffmpeg
 from functions_download import downloadAudio, downloadVideo, downloadPlaylist, baixar_por_titulo
 from validate import validar_url
 
@@ -61,7 +60,6 @@ def verificar_ffmpeg():
         return False
     except FileNotFoundError:
         print(f'{Fore.BLUE}{Back.BLACK}FFmpeg não está instalado ou não está no PATH.{Style.RESET_ALL}')
-        instalar_ffmpeg()
         return False
 
 largura_terminal = (shutil.get_terminal_size().columns - 10)
