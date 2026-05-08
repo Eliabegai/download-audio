@@ -1,128 +1,129 @@
-# YouTube to MP3 Downloader
+# Downloader Pro (Tauri + Python bridge)
 
-Este projeto permite baixar vídeos do YouTube e convertê-los para MP3 usando `yt-dlp`.
+Aplicativo desktop para download de YouTube com:
 
-Projeto para estudo de python e também fácilitar o download de músicas para algumas situações, onde que pela interneet é mais lento.
-No momento tem apenas a opção de baixar em `.mp3`, mas vou adicionar mais opções confome o tempo.
+- áudio
+- vídeo
+- playlist (áudio)
+- busca direta no app (limitada a 5 resultados)
+- preview com título e thumbnail
 
----
-# Download
-
-### Mac
-[Baixar Executável](dist/mac/2_1/baixar-audio-mac)
-
-### Windows
-[Baixar Executável](dist/windows/2_0/baixar-audio-windows.exe)
-
----
-## Featured Features
-1. [x] Selecionar opções como `.mp3`, `.wav`, `.mp4`, entre outros;
-2. [ ] Force installation `ffmpeg` caso não tenha no computador. Windows ou Mac;
-3. [ ] Opção para alterar o nome do arquivo baixado;
-4. [ ] Opção para usar sem os cookies, colocar um alerta falando que pode ser necessário do arquivo para baixar certas músicas ou playlists;
-5. [ ] Monitorar a pasta se foi adicionado o arquivo `coockies.txt;
- 
----
-## Instalação
-
-- Baixe os cookies do youtube com sua conta logada para facilitar o processo de download e também poder baixar playlist privada.
-- Salvar o arquivo no mesmo caminho do executável com o nome `cookies.txt`
-- Executar arquivo.
-
-
-## Uso
-
-1. **Execute o script Python:**
-    
-    Selecione uma das opções de download
-    ![Tela Principal](assets/tela_principal.png) 
-
-
-
-2. **Insira a URL do vídeo do YouTube:**
-
-    Exemplo: Opção 1: **Áudio**
-    ![Selecionado Audio](assets/select_audio.png)
-
-3.
+Motor de download usa `yt-dlp` via bridge Python.
+Interface usa `React + TypeScript + Tauri v2`.
 
 ---
 
-## Pré-requisitos
+## Requisitos
 
-- Python 3.10 ou superior
-- `pip` (gerenciador de pacotes Python)
+- Node.js 18+ (recomendado 20+)
+- npm
+- Rust (toolchain estável) + Cargo
+- Python 3.9+
+- FFmpeg no `PATH`
 
-1. **Clone o repositório ou faça o download dos arquivos do projeto.**
+### Instalação do FFmpeg (exemplos)
 
-2. **Instale as dependências necessárias:**
+- **Windows**
 
-    Abra o terminal e navegue até o diretório do projeto. Em seguida, execute o comando:
+  ```bash
+  winget install "FFmpeg (Essentials Build)"
+  ```
 
-    ```bash
-        pip install -r requirements.txt
-    ```
+- **macOS**
 
-3. **Verifique e configure o `ffmpeg`:**
+  ```bash
+  brew install ffmpeg
+  ```
 
-    Certifique-se de que o `ffmpeg` esteja instalado e disponível no `PATH` do seu sistema.
+- **Linux (Debian/Ubuntu)**
 
-    - **No Windows**: Baixe o `ffmpeg` de [ffmpeg.org](https://ffmpeg.org/download.html) e adicione o diretório `bin` ao `PATH`.
-       ```bash
-       winget install "FFmpeg (Essentials Build)"
-       ```
+  ```bash
+  sudo apt update
+  sudo apt install ffmpeg
+  ```
 
-    - **No macOS**: Instale o `ffmpeg` usando `brew`:
-
-        ```bash
-        brew install ffmpeg
-        ```
-
-    - **No Linux**: Instale o `ffmpeg` usando o gerenciador de pacotes da sua distribuição, por exemplo:
-
-        ```bash
-        sudo apt update
-        sudo apt install ffmpeg
-        ```
 ---
-## Uso
 
-1. **Execute o script Python:**
+## Setup rápido (novo ambiente)
 
-    No terminal, navegue até o diretório do projeto e execute o script:
+No diretório raiz do projeto:
 
-    ```bash
-    python baixar_audio.py
-    ```
+```bash
+pip install -r requirements.txt
+npm run desktop:install
+```
 
-2. **Insira a URL do vídeo do YouTube:**
+Isso instala dependências Python e frontend desktop.
 
-    Quando solicitado, insira a URL do vídeo do YouTube que deseja baixar e converter para MP3.
+---
 
-3. **O áudio será baixado e convertido para MP3:**
+## Comandos principais (raiz do projeto)
 
-    O arquivo MP3 será salvo no diretório atual.
-   
-4. **Criar Executável MAC**
-    - Required `pyinstaller`
+Sem `--prefix` manual:
 
-    ```bash
-    pyinstaller --onefile --name=baixar-audio-mac --distpath dist/mac/2_1 ./src/baixar_audio.py
-    ```
+```bash
+npm run dev
+npm run build
+npm run preview
+npm run tauri:dev
+npm run tauri:build
+```
 
-    - permissão para rodar no mac
-    ```bash
-    chmod +x pasta_atual/baixar-audio-mac
-    ```
+### O que cada comando faz
 
-   **/dist/mac**
-   > Arquivo executável para download dos audios.
+- `npm run dev`: sobe somente Vite (frontend web local)
+- `npm run tauri:dev`: abre app desktop Tauri com hot reload
+- `npm run build`: build frontend (`apps/desktop/dist`)
+- `npm run tauri:build`: gera build desktop empacotado
 
-5. **Criar Executável Windows**
-    - Required `pyinstaller`
-    ```bash
-    python -m PyInstaller --onefile --name=baixar-audio-windows --distpath dist/windows/2_1 ./src/baixar_audio.py
-    ``` 
+---
 
-    **/dist/windows**
-   > Arquivo executável para download dos audios.
+## Fluxo de uso
+
+1. Abrir app em dev:
+
+   ```bash
+   npm run tauri:dev
+   ```
+
+2. Informar URL YouTube ou termo.
+3. Fazer preview ou busca.
+4. Selecionar modo (`Audio`, `Video`, `Playlist Audio`).
+5. Escolher pasta de saída (opcional).
+6. Clicar em `Baixar`.
+
+Durante download:
+
+- spinner de loading
+- barra de progresso
+- velocidade/ETA
+- contador de itens (playlist)
+- logs de andamento
+
+Após concluir:
+
+- campo de entrada e resultados são limpos
+- pasta de saída é mantida
+
+---
+
+## Cookies (opcional)
+
+Se quiser melhorar compatibilidade com conteúdos restritos, adicione `cookies.txt` na raiz do projeto.
+O bridge tenta usar esse arquivo automaticamente quando presente.
+
+---
+
+## Estrutura relevante
+
+- `apps/desktop/` -> frontend e shell Tauri
+- `apps/desktop/src-tauri/` -> comandos Rust
+- `src/tauri_bridge.py` -> bridge Python para preview/search/download
+- `src/functions_download.py` -> motor yt-dlp
+- `src/format_profiles.py` -> perfis de formato
+
+---
+
+## Changelog da refatoração atual
+
+Veja `CHANGELOG.md` para lista completa das mudanças feitas nesta migração/refino.
