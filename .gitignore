@@ -9,3 +9,16 @@ __pycache__
 
 /src/downloads/*
 /src/temp
+
+# Local Rust build cache (não precisa ir pro repo)
+.cargo-local/
+
+# Python venv local
+venv/
+
+# Frontend/Tauri build artifacts (desktop)
+apps/**/node_modules/
+apps/**/dist/
+apps/**/src-tauri/target/
+
+.cargo-local/
