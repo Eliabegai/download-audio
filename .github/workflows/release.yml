@@ -1,0 +1,88 @@
+name: Build & Release
+
+# Triggers:
+#   - workflow_dispatch: roda manualmente, gera apenas artefatos (sem release)
+#   - push de tag v*  : faz build + cria GitHub Release (draft) anexando os bundles
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform }})
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: "--target universal-apple-darwin"
+            rust-targets: "aarch64-apple-darwin,x86_64-apple-darwin"
+            artifact-name: macos
+          - platform: windows-latest
+            args: ""
+            rust-targets: ""
+            artifact-name: windows
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+
+      - name: Setup Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - name: Cache Cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+
+      - name: Install frontend dependencies
+        working-directory: apps/desktop
+        run: npm ci
+
+      - name: Build (and create release on tag)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+          releaseName: ${{ startsWith(github.ref, 'refs/tags/') && format('Downloader Pro {0}', github.ref_name) || '' }}
+          releaseBody: |
+            Build automático do Downloader Pro.
+
+            Veja `CHANGELOG.md` para detalhes desta versão.
+
+            > Aviso: o app usa um bridge Python (yt-dlp). O usuário final precisa ter
+            > Python 3 e `yt-dlp` instalados no PATH para download/preview funcionarem.
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      - name: Upload bundles as artifacts
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: downloader-pro-${{ matrix.artifact-name }}
+          if-no-files-found: warn
+          path: |
+            apps/desktop/src-tauri/target/release/bundle/**/*.dmg
+            apps/desktop/src-tauri/target/release/bundle/**/*.app
+            apps/desktop/src-tauri/target/release/bundle/**/*.exe
+            apps/desktop/src-tauri/target/release/bundle/**/*.msi
+            apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/**/*.dmg
+            apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/**/*.app
