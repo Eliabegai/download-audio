@@ -1,0 +1,12 @@
+{
+  "name": "download-audio-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix apps/desktop",
+    "build": "npm run build --prefix apps/desktop",
+    "preview": "npm run preview --prefix apps/desktop",
+    "tauri:dev": "npm run tauri:dev --prefix apps/desktop",
+    "tauri:build": "npm run tauri:build --prefix apps/desktop",
+    "desktop:install": "npm install --prefix apps/desktop"
+  }
+}
