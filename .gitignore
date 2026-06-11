@@ -27,3 +27,5 @@ apps/desktop/src/**/*.jsx
 apps/desktop/src/**/*.d.ts
 
 .cargo-local/
+
+.cursor
