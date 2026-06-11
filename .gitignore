@@ -21,4 +21,9 @@ apps/**/node_modules/
 apps/**/dist/
 apps/**/src-tauri/target/
 
+# JS/JSX gerados pelo tsc por engano (fonte é só .ts/.tsx)
+apps/desktop/src/**/*.js
+apps/desktop/src/**/*.jsx
+apps/desktop/src/**/*.d.ts
+
 .cargo-local/

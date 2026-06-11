@@ -11,6 +11,8 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
+    "noEmit": true,
+    "isolatedModules": true,
     "types": ["vite/client"]
   },
   "include": ["src"]
