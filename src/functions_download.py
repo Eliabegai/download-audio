@@ -3,7 +3,7 @@ import shutil
 import yt_dlp
 from hooks import status_downloading, reset_and_set_total
 from format_profiles import get_profile
-from ffmpeg_utils import ensure_ffmpeg_for_profile
+from ffmpeg_utils import ensure_ffmpeg_for_profile, ffmpeg_location_for_ydl
 
 def _available_js_runtimes():
     runtimes = {}
@@ -32,6 +32,10 @@ def _base_opts(target_folder, profile, path_cookies, noplaylist=True, progress_h
         'nowarnings': True,
         'verbose': False,
     }
+
+    ffmpeg_loc = ffmpeg_location_for_ydl()
+    if ffmpeg_loc:
+        opts['ffmpeg_location'] = ffmpeg_loc
 
     js_runtimes = _available_js_runtimes()
     if js_runtimes:
