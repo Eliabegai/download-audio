@@ -9,8 +9,13 @@ export default defineConfig({
     strictPort: true
   },
   envPrefix: ["VITE_", "TAURI_"],
+  esbuild: {
+    supported: {
+      destructuring: true
+    }
+  },
   build: {
-    target: ["es2021", "chrome100", "safari13"],
+    target: ["es2021", "chrome100", "safari14.1"],
     minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
     sourcemap: !!process.env.TAURI_DEBUG
   }
