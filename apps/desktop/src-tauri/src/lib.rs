@@ -54,7 +54,30 @@ fn python_candidates() -> &'static [&'static str] {
     }
 }
 
-fn resolve_python() -> Result<String, String> {
+fn venv_python_path(root: &Path) -> PathBuf {
+    if cfg!(target_os = "windows") {
+        root.join(".venv").join("Scripts").join("python.exe")
+    } else {
+        root.join(".venv").join("bin").join("python3")
+    }
+}
+
+fn python_is_available(path: &Path) -> bool {
+    Command::new(path)
+        .arg("--version")
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+}
+
+fn resolve_python(root: &Path) -> Result<PathBuf, String> {
+    let venv_python = venv_python_path(root);
+    if venv_python.is_file() && python_is_available(&venv_python) {
+        return Ok(venv_python);
+    }
+
     for name in python_candidates() {
         let mut cmd = Command::new(name);
         if name == &"py" {
@@ -69,11 +92,11 @@ fn resolve_python() -> Result<String, String> {
             .map(|s| s.success())
             .unwrap_or(false);
         if ok {
-            return Ok((*name).to_string());
+            return Ok(PathBuf::from(*name));
         }
     }
     Err(
-        "Python não encontrado no PATH. Instale Python 3 e yt-dlp (pip install -r requirements.txt)."
+        "Python não encontrado. Crie o ambiente com: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt"
             .into(),
     )
 }
@@ -88,11 +111,11 @@ fn run_python_json(op: &str, payload: Value) -> Result<String, String> {
         ));
     }
 
-    let python = resolve_python()?;
+    let python = resolve_python(&root)?;
     let stdin_str = serde_json::to_string(&payload).map_err(|e| e.to_string())?;
 
     let mut cmd = Command::new(&python);
-    if python == "py" {
+    if python.to_string_lossy() == "py" {
         cmd.args(["-3"]);
     }
     cmd.arg(&bridge)
@@ -105,7 +128,7 @@ fn run_python_json(op: &str, payload: Value) -> Result<String, String> {
     let mut child = cmd.spawn().map_err(|e| {
         format!(
             "Falha ao iniciar Python ({}): {}",
-            python, e
+            python.display(), e
         )
     })?;
 
@@ -186,7 +209,7 @@ async fn start_download(app: tauri::AppHandle, request: DownloadRequest) -> Resu
         ));
     }
 
-    let python = resolve_python()?;
+    let python = resolve_python(&root)?;
 
     let mut payload = json!({
         "input": request.input.trim(),
@@ -206,7 +229,7 @@ async fn start_download(app: tauri::AppHandle, request: DownloadRequest) -> Resu
     let stdin_str = serde_json::to_string(&payload).map_err(|e| e.to_string())?;
 
     let mut cmd = tokio::process::Command::new(&python);
-    if python == "py" {
+    if python.to_string_lossy() == "py" {
         cmd.arg("-3");
     }
     cmd.arg(&bridge)
@@ -219,7 +242,7 @@ async fn start_download(app: tauri::AppHandle, request: DownloadRequest) -> Resu
     let mut child = cmd.spawn().map_err(|e| {
         format!(
             "Falha ao iniciar Python ({}): {}",
-            python, e
+            python.display(), e
         )
     })?;
 
