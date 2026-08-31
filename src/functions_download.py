@@ -5,6 +5,7 @@ from hooks import status_downloading, reset_and_set_total
 from format_profiles import get_profile
 from ffmpeg_utils import ensure_ffmpeg_for_profile, ffmpeg_location_for_ydl
 from js_runtime_utils import youtube_compat_opts
+from bridge_hooks import bridge_progress_hook, emit_progress
 
 # Clientes extras quando o conjunto padrão ainda devolve 403.
 _FALLBACK_PLAYER_CLIENTS = (
@@ -37,12 +38,23 @@ def _with_player_clients(opts: dict, clients: list[str]) -> dict:
     return merged
 
 
+def _uses_bridge_hooks(ydl_opts: dict) -> bool:
+    return bridge_progress_hook in (ydl_opts.get("progress_hooks") or [])
+
+
 def _download_with_fallback(url_download, ydl_opts):
     attempts = [ydl_opts]
     attempts.extend(_with_player_clients(ydl_opts, clients) for clients in _FALLBACK_PLAYER_CLIENTS)
+    notify = _uses_bridge_hooks(ydl_opts)
 
     last_error = None
-    for opts in attempts:
+    for index, opts in enumerate(attempts):
+        if notify and index > 0:
+            emit_progress({
+                "kind": "retrying",
+                "title": url_download,
+                "attempt": index + 1,
+            })
         try:
             with yt_dlp.YoutubeDL(opts) as ydl:
                 ydl.download([url_download])
@@ -71,8 +83,8 @@ def _base_opts(target_folder, profile, path_cookies, noplaylist=True, progress_h
         'trim_file_name': 140,
         'quiet': True,
         'no_warnings': True,
+        'noprogress': True,
         'verbose': False,
-        'check_formats': 'selected',
     }
     opts.update(youtube_compat_opts(path_cookies))
 

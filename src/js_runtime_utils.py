@@ -167,8 +167,9 @@ def youtube_compat_opts(cookies_path: str | None = None) -> dict:
                 ],
             }
         },
-        "retries": 10,
-        "fragment_retries": 10,
+        # Poucas tentativas no mesmo cliente: falha rápido e o fallback troca de client.
+        "retries": 2,
+        "fragment_retries": 3,
         "extractor_retries": 3,
     }
     if cookies_path:

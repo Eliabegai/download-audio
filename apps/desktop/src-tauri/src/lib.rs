@@ -46,6 +46,20 @@ fn cookies_path(root: &Path) -> Option<String> {
     }
 }
 
+fn parse_progress_line(line: &str) -> Option<Value> {
+    let rest = line.rsplit_once("TAURI_PROGRESS:")?.1.trim();
+    if let Ok(value) = serde_json::from_str::<Value>(rest) {
+        return Some(value);
+    }
+    let json_start = rest.find('{')?;
+    let mut de = serde_json::Deserializer::from_str(&rest[json_start..]);
+    Value::deserialize(&mut de).ok()
+}
+
+fn python_env() -> [(&'static str, &'static str); 2] {
+    [("PYTHONUNBUFFERED", "1"), ("PYTHONIOENCODING", "utf-8")]
+}
+
 fn python_candidates() -> &'static [&'static str] {
     if cfg!(target_os = "windows") {
         &["python", "python3", "py"]
@@ -121,6 +135,7 @@ fn run_python_json(op: &str, payload: Value) -> Result<String, String> {
     cmd.arg(&bridge)
         .arg(op)
         .current_dir(&root)
+        .envs(python_env())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -235,6 +250,7 @@ async fn start_download(app: tauri::AppHandle, request: DownloadRequest) -> Resu
     cmd.arg(&bridge)
         .arg("download")
         .current_dir(&root)
+        .envs(python_env())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -266,10 +282,9 @@ async fn start_download(app: tauri::AppHandle, request: DownloadRequest) -> Resu
         let reader = BufReader::new(stdout);
         let mut lines = reader.lines();
         while let Some(line) = lines.next_line().await.map_err(|e| e.to_string())? {
-            let Some(rest) = line.strip_prefix("TAURI_PROGRESS:") else {
+            let Some(value) = parse_progress_line(&line) else {
                 continue;
             };
-            let value: Value = serde_json::from_str(rest).map_err(|e| e.to_string())?;
             app_stdout
                 .emit("download-progress", value)
                 .map_err(|e| e.to_string())?;

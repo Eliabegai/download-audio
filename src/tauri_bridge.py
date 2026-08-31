@@ -13,6 +13,7 @@ import json
 import os
 import sys
 
+from bridge_hooks import emit_progress
 from js_runtime_utils import youtube_compat_opts
 
 
@@ -39,12 +40,11 @@ def _cookies_path(data: dict) -> str | None:
 
 
 def _default_output_path() -> str:
-    return os.path.join(os.path.expanduser("~"), "Downloads", "Musica")
+    return os.path.join(os.path.expanduser("~"), "Downloads")
 
 
 def _emit_progress(payload: dict) -> None:
-    line = json.dumps(payload, ensure_ascii=False)
-    print(f"TAURI_PROGRESS:{line}", flush=True)
+    emit_progress(payload)
 
 
 def cmd_preview(data: dict) -> dict:
@@ -171,6 +171,7 @@ def cmd_download(data: dict) -> None:
         started_title = info.get("title") or url_or_term
 
     _emit_progress({"kind": "started", "mode": mode, "title": started_title})
+    _emit_progress({"kind": "preparing", "title": started_title})
 
     if mode == "playlist":
         info_opts = {
@@ -204,6 +205,12 @@ def cmd_download(data: dict) -> None:
 
 
 def main() -> int:
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+        sys.stderr.reconfigure(line_buffering=True)
+    except (AttributeError, OSError):
+        pass
+
     if len(sys.argv) < 2:
         print("uso: tauri_bridge.py <preview|search|download>", file=sys.stderr)
         return 2

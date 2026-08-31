@@ -21,6 +21,7 @@ type Theme = "dark" | "light";
 type ProgressPayload = {
   kind?: string;
   progress?: number | null;
+  percent?: number | null;
   percentStr?: string | null;
   speedStr?: string | null;
   etaStr?: string | null;
@@ -28,6 +29,7 @@ type ProgressPayload = {
   playlistIndex?: number | null;
   playlistCount?: number | null;
   mode?: string | null;
+  attempt?: number | null;
 };
 
 type DownloadProgressState = {
@@ -76,10 +78,15 @@ function prependUniqueLog(logs: string[], next: string): string[] {
   return [next, ...logs].slice(0, 8);
 }
 
+function stripAnsi(value?: string | null): string {
+  if (!value) return "";
+  return value.replace(/\u001b\[[0-9;]*m/g, "").trim();
+}
+
 function parsePercent(percentStr?: string | null): number {
-  if (!percentStr) return 0;
-  const cleaned = percentStr.replace("%", "").trim();
-  const num = Number.parseFloat(cleaned);
+  const cleaned = stripAnsi(percentStr).replace("%", "").trim();
+  const match = cleaned.match(/([\d.]+)/);
+  const num = match ? Number.parseFloat(match[1]) : Number.NaN;
   return Number.isFinite(num) ? Math.max(0, Math.min(100, Math.round(num))) : 0;
 }
 
@@ -243,6 +250,20 @@ export default function App() {
           logs: prependUniqueLog(prev.logs, "Download iniciado...")
         }));
         setStatus("Download iniciado...");
+      } else if (p.kind === "preparing") {
+        setDownloadProgress((prev) => ({
+          ...prev,
+          title: p.title || prev.title,
+          logs: prependUniqueLog(prev.logs, "Preparando download...")
+        }));
+        setStatus("Preparando download...");
+      } else if (p.kind === "retrying") {
+        const attempt = p.attempt ? ` (tentativa ${p.attempt})` : "";
+        setDownloadProgress((prev) => ({
+          ...prev,
+          logs: prependUniqueLog(prev.logs, `Tentando outro servidor${attempt}...`)
+        }));
+        setStatus("Tentando outro servidor do YouTube...");
       } else if (p.kind === "playlist-meta") {
         setDownloadProgress((prev) => ({
           ...prev,
@@ -255,18 +276,20 @@ export default function App() {
         }));
       } else if (p.kind === "downloading") {
         const pctValue =
-          typeof p.progress === "number"
-            ? Math.round(p.progress * 100)
-            : parsePercent(p.percentStr);
-        const pct = pctValue ? `${pctValue}%` : "";
-        const parts = [pct || p.percentStr || "", p.speedStr || "", p.etaStr || ""].filter(
-          Boolean
-        );
+          typeof p.percent === "number"
+            ? Math.max(0, Math.min(100, Math.round(p.percent)))
+            : typeof p.progress === "number"
+              ? Math.round(p.progress * 100)
+              : parsePercent(p.percentStr);
+        const speed = stripAnsi(p.speedStr);
+        const eta = stripAnsi(p.etaStr);
+        const pct = `${pctValue}%`;
+        const parts = [pct, speed, eta].filter(Boolean);
         setDownloadProgress((prev) => ({
           ...prev,
           percent: pctValue,
-          speed: p.speedStr || "",
-          eta: p.etaStr || "",
+          speed,
+          eta,
           title: p.title || prev.title,
           total: p.playlistCount || prev.total
         }));
@@ -568,7 +591,7 @@ export default function App() {
                   className="field-input"
                   value={outputPath}
                   onChange={(event) => setOutputPath(event.target.value)}
-                  placeholder="Padrão: ~/Downloads/Musica"
+                  placeholder="Padrão: ~/Downloads"
                 />
                 <button
                   type="button"
