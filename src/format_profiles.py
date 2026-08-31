@@ -34,14 +34,14 @@ FORMAT_PROFILES: dict[str, FormatProfile] = {
     "video_mp4": FormatProfile(
         profile_id="video_mp4",
         output_group="video",
-        yt_dlp_format="bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/bestvideo+bestaudio/best",
+        yt_dlp_format="bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/b",
         requires_ffmpeg=True,
         merge_output_format="mp4",
     ),
     "video_webm": FormatProfile(
         profile_id="video_webm",
         output_group="video",
-        yt_dlp_format="bestvideo[ext=webm]+bestaudio[ext=webm]/best[ext=webm]",
+        yt_dlp_format="bestvideo[ext=webm]+bestaudio[ext=webm]/bv*+ba/b",
         requires_ffmpeg=False,
         merge_output_format="webm",
     ),

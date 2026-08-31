@@ -13,6 +13,8 @@ import json
 import os
 import sys
 
+from js_runtime_utils import youtube_compat_opts
+
 
 def _repo_src_dir() -> str:
     return os.path.dirname(os.path.abspath(__file__))
@@ -60,8 +62,7 @@ def cmd_preview(data: dict) -> dict:
         "skip_download": True,
         "ignoreerrors": True,
     }
-    if cookies:
-        opts["cookies"] = cookies
+    opts.update(youtube_compat_opts(cookies))
 
     with yt_dlp.YoutubeDL(opts) as ydl:
         if _looks_like_youtube_url(raw_input):
@@ -102,8 +103,7 @@ def cmd_search(data: dict) -> list:
         "extract_flat": True,
         "ignoreerrors": True,
     }
-    if cookies:
-        opts["cookies"] = cookies
+    opts.update(youtube_compat_opts(cookies))
 
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)
@@ -165,8 +165,7 @@ def cmd_download(data: dict) -> None:
             "ignoreerrors": True,
             "skip_download": True,
         }
-        if cookies:
-            info_opts["cookies"] = cookies
+        info_opts.update(youtube_compat_opts(cookies))
         with yt_dlp.YoutubeDL(info_opts) as ydl:
             info = ydl.extract_info(url_or_term, download=False)
         started_title = info.get("title") or url_or_term
@@ -180,8 +179,7 @@ def cmd_download(data: dict) -> None:
             "ignoreerrors": True,
             "extract_flat": "in_playlist",
         }
-        if cookies:
-            info_opts["cookies"] = cookies
+        info_opts.update(youtube_compat_opts(cookies))
         with yt_dlp.YoutubeDL(info_opts) as ydl:
             info = ydl.extract_info(url_or_term, download=False)
         total = len(info.get("entries") or [])

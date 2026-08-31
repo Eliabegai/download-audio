@@ -1,17 +1,60 @@
 import os
-import shutil
 import yt_dlp
+from yt_dlp.utils import DownloadError
 from hooks import status_downloading, reset_and_set_total
 from format_profiles import get_profile
 from ffmpeg_utils import ensure_ffmpeg_for_profile, ffmpeg_location_for_ydl
+from js_runtime_utils import youtube_compat_opts
 
-def _available_js_runtimes():
-    runtimes = {}
-    if shutil.which('node'):
-        runtimes['node'] = {}
-    if shutil.which('deno'):
-        runtimes['deno'] = {}
-    return runtimes
+# Clientes extras quando o conjunto padrão ainda devolve 403.
+_FALLBACK_PLAYER_CLIENTS = (
+    ["android", "web_embedded", "web_safari"],
+    ["web_embedded", "web_safari"],
+    ["android"],
+)
+
+
+def _is_retryable_download_error(exc: BaseException) -> bool:
+    text = str(exc).lower()
+    return any(
+        marker in text
+        for marker in (
+            "403",
+            "forbidden",
+            "unable to download video data",
+            "requested format is not available",
+        )
+    )
+
+
+def _with_player_clients(opts: dict, clients: list[str]) -> dict:
+    merged = dict(opts)
+    extractor_args = dict(merged.get("extractor_args") or {})
+    youtube = dict(extractor_args.get("youtube") or {})
+    youtube["player_client"] = clients
+    extractor_args["youtube"] = youtube
+    merged["extractor_args"] = extractor_args
+    return merged
+
+
+def _download_with_fallback(url_download, ydl_opts):
+    attempts = [ydl_opts]
+    attempts.extend(_with_player_clients(ydl_opts, clients) for clients in _FALLBACK_PLAYER_CLIENTS)
+
+    last_error = None
+    for opts in attempts:
+        try:
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                ydl.download([url_download])
+            return
+        except DownloadError as exc:
+            last_error = exc
+            if not _is_retryable_download_error(exc):
+                raise
+
+    if last_error:
+        raise last_error
+
 
 def _base_opts(target_folder, profile, path_cookies, noplaylist=True, progress_hooks=None):
     hooks = progress_hooks if progress_hooks is not None else [status_downloading]
@@ -22,25 +65,20 @@ def _base_opts(target_folder, profile, path_cookies, noplaylist=True, progress_h
         'format': profile.yt_dlp_format,
         'outtmpl': os.path.join(target_folder, file_template),
         'noplaylist': noplaylist,
-        'cookies': path_cookies,
-        'cookies-from-browser': ['chrome', 'firefox', 'edge', 'brave'],
         'progress_hooks': hooks,
         'nooverwrites': True,
         'windowsfilenames': True,
         'trim_file_name': 140,
         'quiet': True,
-        'nowarnings': True,
+        'no_warnings': True,
         'verbose': False,
+        'check_formats': 'selected',
     }
+    opts.update(youtube_compat_opts(path_cookies))
 
     ffmpeg_loc = ffmpeg_location_for_ydl()
     if ffmpeg_loc:
         opts['ffmpeg_location'] = ffmpeg_loc
-
-    js_runtimes = _available_js_runtimes()
-    if js_runtimes:
-        # yt-dlp API expects dict: {runtime: {config}}
-        opts['js_runtimes'] = js_runtimes
 
     if profile.postprocessor:
         opts['postprocessors'] = [profile.postprocessor]
@@ -60,10 +98,7 @@ def downloadAudio(url_download, output_path, path_cookies=None, profile_id='audi
     os.makedirs(audio_folder, exist_ok=True)
 
     ydl_opts = _base_opts(audio_folder, profile, path_cookies, noplaylist=True, progress_hooks=progress_hooks)
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url_download])
-        
+    _download_with_fallback(url_download, ydl_opts)
     return audio_folder
 
 
@@ -77,10 +112,7 @@ def downloadVideo(url_download, output_path, path_cookies=None, profile_id='vide
     os.makedirs(video_folder, exist_ok=True)
     
     ydl_opts = _base_opts(video_folder, profile, path_cookies, noplaylist=True, progress_hooks=progress_hooks)
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url_download])
-    
+    _download_with_fallback(url_download, ydl_opts)
     return video_folder
 
 def downloadPlaylist(url_download, output_path, path_cookies=None, profile_id='audio_mp3', progress_hooks=None):
@@ -89,14 +121,13 @@ def downloadPlaylist(url_download, output_path, path_cookies=None, profile_id='a
 
     info_opts = {
         'noplaylist': False,
-        'cookies': path_cookies,
-        'cookies-from-browser': ['chrome', 'firefox', 'edge', 'brave'],
         'ignoreerrors': True,
         'extract_flat': 'in_playlist',
-        'nowarnings': True,
+        'no_warnings': True,
         'quiet': True,
         'verbose': False,
     }
+    info_opts.update(youtube_compat_opts(path_cookies))
     
     with yt_dlp.YoutubeDL(info_opts) as ydl:
         info = ydl.extract_info(url_download, download=False)
@@ -113,10 +144,7 @@ def downloadPlaylist(url_download, output_path, path_cookies=None, profile_id='a
     
     ydl_opts = _base_opts(playlist_folder, profile, path_cookies, noplaylist=False, progress_hooks=progress_hooks)
     ydl_opts['ignoreerrors'] = True
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url_download])
-    
+    _download_with_fallback(url_download, ydl_opts)
     return playlist_folder
 
 def baixar_por_titulo(titulo, output_path, path_cookies=None, profile_id='audio_mp3', progress_hooks=None):
@@ -131,8 +159,5 @@ def baixar_por_titulo(titulo, output_path, path_cookies=None, profile_id='audio_
     ydl_opts = _base_opts(audio_folder, profile, path_cookies, noplaylist=True, progress_hooks=progress_hooks)
     ydl_opts['default_search'] = 'ytsearch'
     ydl_opts['ignoreerrors'] = True
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([titulo])
-        
+    _download_with_fallback(titulo, ydl_opts)
     return audio_folder 
