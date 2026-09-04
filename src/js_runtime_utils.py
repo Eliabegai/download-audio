@@ -25,7 +25,12 @@ def _exe(name: str) -> str:
 
 
 def _is_executable(path: str) -> bool:
-    return os.path.isfile(path) and os.access(path, os.X_OK)
+    if not os.path.isfile(path):
+        return False
+    # No Windows, os.access(X_OK) é pouco confiável; .exe/.cmd bastam.
+    if sys.platform.startswith("win"):
+        return path.lower().endswith((".exe", ".cmd", ".bat")) or os.access(path, os.X_OK)
+    return os.access(path, os.X_OK)
 
 
 def _common_bin_dirs() -> list[str]:

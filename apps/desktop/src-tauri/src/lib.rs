@@ -5,6 +5,25 @@ use std::process::{Command, Stdio};
 use tauri::{Emitter, Manager};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 
+/// Evita janela de console no Windows ao spawnar python.exe / py.exe.
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
+fn hide_console(cmd: &mut Command) {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+}
+
+fn hide_console_tokio(cmd: &mut tokio::process::Command) {
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PreviewInfo {
@@ -77,11 +96,12 @@ fn venv_python_path(root: &Path) -> PathBuf {
 }
 
 fn python_is_available(path: &Path) -> bool {
-    Command::new(path)
-        .arg("--version")
+    let mut cmd = Command::new(path);
+    cmd.arg("--version")
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
+        .stderr(Stdio::null());
+    hide_console(&mut cmd);
+    cmd.status()
         .map(|s| s.success())
         .unwrap_or(false)
 }
@@ -99,12 +119,9 @@ fn resolve_python(root: &Path) -> Result<PathBuf, String> {
         } else {
             cmd.arg("--version");
         }
-        let ok = cmd
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-            .map(|s| s.success())
-            .unwrap_or(false);
+        cmd.stdout(Stdio::null()).stderr(Stdio::null());
+        hide_console(&mut cmd);
+        let ok = cmd.status().map(|s| s.success()).unwrap_or(false);
         if ok {
             return Ok(PathBuf::from(*name));
         }
@@ -139,6 +156,7 @@ fn run_python_json(op: &str, payload: Value) -> Result<String, String> {
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
+    hide_console(&mut cmd);
 
     let mut child = cmd.spawn().map_err(|e| {
         format!(
@@ -254,6 +272,7 @@ async fn start_download(app: tauri::AppHandle, request: DownloadRequest) -> Resu
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
+    hide_console_tokio(&mut cmd);
 
     let mut child = cmd.spawn().map_err(|e| {
         format!(

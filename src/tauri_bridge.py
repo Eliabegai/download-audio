@@ -69,9 +69,12 @@ def cmd_preview(data: dict) -> dict:
             info = ydl.extract_info(raw_input, download=False)
         else:
             info = ydl.extract_info(f"ytsearch1:{raw_input}", download=False)
-            entries = info.get("entries") or []
+            entries = (info or {}).get("entries") or []
             if entries:
                 info = entries[0]
+
+    if not info:
+        raise RuntimeError("Não foi possível obter informações do vídeo")
 
     thumb = info.get("thumbnail") or ""
     thumbs = info.get("thumbnails") or []
@@ -108,7 +111,7 @@ def cmd_search(data: dict) -> list:
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)
 
-    entries = info.get("entries") or []
+    entries = (info or {}).get("entries") or []
     out = []
     for entry in entries[:limit]:
         if not entry:
@@ -168,7 +171,8 @@ def cmd_download(data: dict) -> None:
         info_opts.update(youtube_compat_opts(cookies))
         with yt_dlp.YoutubeDL(info_opts) as ydl:
             info = ydl.extract_info(url_or_term, download=False)
-        started_title = info.get("title") or url_or_term
+        if info:
+            started_title = info.get("title") or url_or_term
 
     _emit_progress({"kind": "started", "mode": mode, "title": started_title})
     _emit_progress({"kind": "preparing", "title": started_title})
@@ -183,12 +187,12 @@ def cmd_download(data: dict) -> None:
         info_opts.update(youtube_compat_opts(cookies))
         with yt_dlp.YoutubeDL(info_opts) as ydl:
             info = ydl.extract_info(url_or_term, download=False)
-        total = len(info.get("entries") or [])
+        total = len((info or {}).get("entries") or [])
         _emit_progress(
             {
                 "kind": "playlist-meta",
                 "playlistCount": total,
-                "title": info.get("title") or "Playlist",
+                "title": (info or {}).get("title") or "Playlist",
             }
         )
 

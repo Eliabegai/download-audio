@@ -7,9 +7,10 @@ from ffmpeg_utils import ensure_ffmpeg_for_profile, ffmpeg_location_for_ydl
 from js_runtime_utils import youtube_compat_opts
 from bridge_hooks import bridge_progress_hook, emit_progress
 
-# Clientes extras quando o conjunto padrão ainda devolve 403.
+# Clientes extras quando o conjunto padrão ainda devolve 403 / formato indisponível.
 _FALLBACK_PLAYER_CLIENTS = (
     ["android", "web_embedded", "web_safari"],
+    ["mweb", "web_safari"],
     ["web_embedded", "web_safari"],
     ["android"],
 )
@@ -24,6 +25,7 @@ def _is_retryable_download_error(exc: BaseException) -> bool:
             "forbidden",
             "unable to download video data",
             "requested format is not available",
+            "only images are available",
         )
     )
 
@@ -38,13 +40,43 @@ def _with_player_clients(opts: dict, clients: list[str]) -> dict:
     return merged
 
 
+def _with_format(opts: dict, fmt: str) -> dict:
+    merged = dict(opts)
+    merged["format"] = fmt
+    return merged
+
+
+def _permissive_formats(ydl_opts: dict) -> list[str]:
+    """Formatos mais permissivos quando o seletor do perfil não casa com o cliente."""
+    original = str(ydl_opts.get("format") or "")
+    has_audio_pp = any(
+        isinstance(pp, dict) and pp.get("key") == "FFmpegExtractAudio"
+        for pp in (ydl_opts.get("postprocessors") or [])
+    )
+    if has_audio_pp or "bestaudio" in original:
+        candidates = ["bestaudio/best", "best"]
+    else:
+        candidates = ["bv*+ba/b", "bestvideo+bestaudio/best", "best"]
+
+    return [fmt for fmt in candidates if fmt != original]
+
+
 def _uses_bridge_hooks(ydl_opts: dict) -> bool:
     return bridge_progress_hook in (ydl_opts.get("progress_hooks") or [])
 
 
 def _download_with_fallback(url_download, ydl_opts):
-    attempts = [ydl_opts]
-    attempts.extend(_with_player_clients(ydl_opts, clients) for clients in _FALLBACK_PLAYER_CLIENTS)
+    base_attempts = [ydl_opts]
+    for fmt in _permissive_formats(ydl_opts):
+        base_attempts.append(_with_format(ydl_opts, fmt))
+
+    attempts = []
+    for base in base_attempts:
+        attempts.append(base)
+        attempts.extend(
+            _with_player_clients(base, clients) for clients in _FALLBACK_PLAYER_CLIENTS
+        )
+
     notify = _uses_bridge_hooks(ydl_opts)
 
     last_error = None
@@ -143,14 +175,17 @@ def downloadPlaylist(url_download, output_path, path_cookies=None, profile_id='a
     
     with yt_dlp.YoutubeDL(info_opts) as ydl:
         info = ydl.extract_info(url_download, download=False)
-    
+
+    if not info:
+        raise DownloadError(f"Não foi possível obter a playlist: {url_download}")
+
     playlist_title = info.get('title', 'Playlist_Desconhecida')
     safe_title = "".join(c for c in playlist_title if c.isalnum() or c in (' ', '_')).rstrip()
     
     playlist_folder = os.path.join(output_path, 'playlist', safe_title)
     os.makedirs(playlist_folder, exist_ok=True)
     
-    total_videos_na_playlist = len(info.get('entries', []))
+    total_videos_na_playlist = len(info.get('entries') or [])
 
     reset_and_set_total(total_videos_na_playlist)
     
