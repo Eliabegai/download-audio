@@ -87,9 +87,20 @@ def _download_with_fallback(url_download, ydl_opts):
                 "title": url_download,
                 "attempt": index + 1,
             })
+        finished = []
+        opts = dict(opts)
+        opts["progress_hooks"] = list(opts.get("progress_hooks") or []) + [
+            lambda d: finished.append(1) if d.get("status") == "finished" else None
+        ]
         try:
             with yt_dlp.YoutubeDL(opts) as ydl:
                 ydl.download([url_download])
+            # Com ignoreerrors o yt-dlp não lança exceção quando todos os itens falham.
+            if opts.get("ignoreerrors") and not finished:
+                raise DownloadError(
+                    "Nenhum item foi baixado. O YouTube pode ter mudado; "
+                    "atualize o yt-dlp: python -m pip install -U --pre \"yt-dlp[default]\" yt-dlp-ejs"
+                )
             return
         except DownloadError as exc:
             last_error = exc

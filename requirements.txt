@@ -1,2 +1,2 @@
-yt-dlp[default]==2026.8.30.232658.dev0
+yt-dlp[default]==2026.10.10.233141.dev0
 yt-dlp-ejs==0.8.0

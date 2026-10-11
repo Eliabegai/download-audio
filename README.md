@@ -78,6 +78,51 @@ npm run tauri:build
 
 ---
 
+## Build no Windows
+
+### Pré-requisitos
+
+- [Build Tools for Visual Studio](https://visualstudio.microsoft.com/visual-cpp-build-tools/) com o workload **"Desenvolvimento para desktop com C++"** (fornece o linker `link.exe` exigido pelo Rust MSVC). Instalação via PowerShell como administrador:
+
+  ```powershell
+  winget install Microsoft.VisualStudio.2022.BuildTools --override "--wait --passive --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+  ```
+
+  Depois da instalação, feche e reabra o terminal.
+
+- Node.js 22+ ou Deno (o `yt-dlp` precisa de um runtime JS para baixar do YouTube).
+- FFmpeg (`winget install "FFmpeg (Essentials Build)"`).
+
+### Criar o ambiente Python
+
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+npm run desktop:install
+```
+
+### Atualizar dependências e gerar o build
+
+O YouTube muda com frequência; atualize o `yt-dlp` antes de cada build:
+
+```powershell
+.venv\Scripts\activate
+python -m pip install -U --pre "yt-dlp[default]" yt-dlp-ejs
+winget upgrade ffmpeg
+npm run tauri:build
+```
+
+O instalador é gerado em `apps/desktop/src-tauri/target/release/bundle/` (`msi/` e `nsis/`).
+
+### Observações
+
+- O app instalado usa o `.venv`, os scripts de `src/` e o FFmpeg desta máquina. Por isso, o build só funciona no computador e na pasta onde foi gerado.
+- Para atualizar apenas o `yt-dlp`, não é preciso gerar um novo build: basta rodar o `pip install -U` acima. Um novo build só é necessário quando houver mudança no código Rust ou na interface.
+- Se downloads falharem com `Requested format is not available` ou uma playlist terminar sem baixar nada, atualize o `yt-dlp`.
+
+---
+
 ## Fluxo de uso
 
 1. Abrir app em dev:
