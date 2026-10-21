@@ -33,9 +33,14 @@ def _is_executable(path: str) -> bool:
     return os.access(path, os.X_OK)
 
 
+def _bundled_bin_dir() -> str:
+    # <root>/src/este_arquivo.py -> <root>/bin (FFmpeg e Node empacotados)
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin")
+
+
 def _common_bin_dirs() -> list[str]:
     home = _home()
-    dirs: list[str] = []
+    dirs: list[str] = [_bundled_bin_dir()]
 
     if sys.platform == "darwin":
         dirs.extend(["/opt/homebrew/bin", "/usr/local/bin"])
@@ -88,7 +93,8 @@ def _nvm_node_bins() -> list[str]:
 
 def _candidate_paths(name: str) -> list[str]:
     exe = _exe(name)
-    candidates: list[str] = []
+    # O runtime empacotado tem prioridade sobre um Node antigo instalado na máquina.
+    candidates: list[str] = [os.path.join(_bundled_bin_dir(), exe)]
 
     found = shutil.which(name)
     if found:

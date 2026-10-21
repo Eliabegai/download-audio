@@ -20,6 +20,7 @@ venv/
 apps/**/node_modules/
 apps/**/dist/
 apps/**/src-tauri/target/
+apps/**/src-tauri/resources/
 
 # JS/JSX gerados pelo tsc por engano (fonte é só .ts/.tsx)
 apps/desktop/src/**/*.js

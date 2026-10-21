@@ -104,22 +104,29 @@ npm run desktop:install
 
 ### Atualizar dependências e gerar o build
 
-O YouTube muda com frequência; atualize o `yt-dlp` antes de cada build:
+O YouTube muda com frequência; atualize o `yt-dlp` no `requirements.txt` (ou reinstale no `.venv`) antes de cada build:
 
 ```powershell
 .venv\Scripts\activate
 python -m pip install -U --pre "yt-dlp[default]" yt-dlp-ejs
-winget upgrade ffmpeg
 npm run tauri:build
 ```
 
-O instalador é gerado em `apps/desktop/src-tauri/target/release/bundle/` (`msi/` e `nsis/`).
+`npm run tauri:build` monta um runtime portátil (Python, `yt-dlp`, FFmpeg, Node.js e os scripts de `src/`) e o grava dentro do executável. O outro computador não precisa ter Python, FFmpeg nem Node instalados.
+
+Para usar sem instalador, copie este arquivo:
+
+`apps/desktop/src-tauri/target/release/bundle/portable/Downloader Pro.exe`
+
+Na primeira abertura ele extrai o runtime para `%LOCALAPPDATA%\Downloader Pro\runtime`. O `.exe` solto em `target/release/downloader_pro_desktop.exe`, copiado sem esse empacotamento, procura uma pasta `resources` ao lado dele e falha em outro PC.
+
+O instalador continua em `apps/desktop/src-tauri/target/release/bundle/` (`msi/` e `nsis/`).
 
 ### Observações
 
-- O app instalado usa o `.venv`, os scripts de `src/` e o FFmpeg desta máquina. Por isso, o build só funciona no computador e na pasta onde foi gerado.
-- Para atualizar apenas o `yt-dlp`, não é preciso gerar um novo build: basta rodar o `pip install -U` acima. Um novo build só é necessário quando houver mudança no código Rust ou na interface.
-- Se downloads falharem com `Requested format is not available` ou uma playlist terminar sem baixar nada, atualize o `yt-dlp`.
+- O modo de desenvolvimento (`npm run tauri:dev`) continua usando o `.venv` desta pasta.
+- Atualizar o `yt-dlp` do `.venv` não atualiza o app já instalado. É preciso gerar o instalador de novo e reinstalá-lo.
+- Se downloads falharem com `Requested format is not available` ou uma playlist terminar sem baixar nada, atualize o `yt-dlp` e gere um novo build.
 
 ---
 

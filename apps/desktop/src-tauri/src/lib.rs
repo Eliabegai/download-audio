@@ -1,9 +1,19 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::fs::File;
+use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::OnceLock;
 use tauri::{Emitter, Manager};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
+
+/// Rodapé anexado ao .exe portátil: [zip][u64 tamanho][u64 magic].
+const PORTABLE_MAGIC: u64 = 0x3144_4E42_4F52_5044;
+const PORTABLE_FOOTER: u64 = 16;
+
+static RUNTIME_ROOT: OnceLock<PathBuf> = OnceLock::new();
+static RUNTIME_ERROR: OnceLock<String> = OnceLock::new();
 
 /// Evita janela de console no Windows ao spawnar python.exe / py.exe.
 #[cfg(windows)]
@@ -49,7 +59,184 @@ struct DownloadRequest {
 }
 
 fn project_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..")
+    // Em debug o app usa o repositório. No release, o caminho é resolvido em prepare_runtime.
+    if cfg!(debug_assertions) {
+        return Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+    }
+    RUNTIME_ROOT
+        .get()
+        .cloned()
+        .unwrap_or_else(|| exe_dir().join("resources"))
+}
+
+fn exe_dir() -> PathBuf {
+    std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|dir| dir.to_path_buf()))
+        .unwrap_or_else(|| PathBuf::from("."))
+}
+
+fn runtime_install_dir() -> PathBuf {
+    let base = std::env::var("LOCALAPPDATA")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| exe_dir());
+    base.join("Downloader Pro").join("runtime")
+}
+
+struct Section<R> {
+    inner: R,
+    start: u64,
+    len: u64,
+    pos: u64,
+}
+
+impl<R: Read + Seek> Read for Section<R> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        if self.pos >= self.len {
+            return Ok(0);
+        }
+        let max = ((self.len - self.pos) as usize).min(buf.len());
+        self.inner.seek(SeekFrom::Start(self.start + self.pos))?;
+        let n = self.inner.read(&mut buf[..max])?;
+        self.pos += n as u64;
+        Ok(n)
+    }
+}
+
+impl<R: Read + Seek> Seek for Section<R> {
+    fn seek(&mut self, pos: SeekFrom) -> std::io::Result<u64> {
+        let next = match pos {
+            SeekFrom::Start(offset) => offset as i64,
+            SeekFrom::End(offset) => self.len as i64 + offset,
+            SeekFrom::Current(offset) => self.pos as i64 + offset,
+        };
+        if next < 0 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "seek antes do início do runtime",
+            ));
+        }
+        self.pos = next as u64;
+        Ok(self.pos)
+    }
+}
+
+fn embedded_payload(exe: &Path) -> Option<(u64, u64)> {
+    let mut file = File::open(exe).ok()?;
+    let size = file.metadata().ok()?.len();
+    if size < PORTABLE_FOOTER {
+        return None;
+    }
+    file.seek(SeekFrom::End(-(PORTABLE_FOOTER as i64))).ok()?;
+    let mut footer = [0u8; 16];
+    file.read_exact(&mut footer).ok()?;
+    let zip_len = u64::from_le_bytes(footer[0..8].try_into().ok()?);
+    let magic = u64::from_le_bytes(footer[8..16].try_into().ok()?);
+    if magic != PORTABLE_MAGIC || zip_len == 0 || zip_len + PORTABLE_FOOTER > size {
+        return None;
+    }
+    Some((size - PORTABLE_FOOTER - zip_len, zip_len))
+}
+
+fn extract_payload(exe: &Path, start: u64, len: u64, dest: &Path) -> Result<(), String> {
+    let file = File::open(exe).map_err(|e| format!("Não foi possível ler o executável: {e}"))?;
+    let section = Section {
+        inner: file,
+        start,
+        len,
+        pos: 0,
+    };
+    let mut archive = zip::ZipArchive::new(section)
+        .map_err(|e| format!("Runtime embutido inválido: {e}"))?;
+    std::fs::create_dir_all(dest).map_err(|e| format!("Não foi possível criar {dest:?}: {e}"))?;
+
+    for index in 0..archive.len() {
+        let mut entry = archive
+            .by_index(index)
+            .map_err(|e| format!("Falha ao ler o runtime: {e}"))?;
+        let Some(rel) = entry.enclosed_name().map(|p| p.to_path_buf()) else {
+            continue;
+        };
+        let out = dest.join(rel);
+        if entry.is_dir() {
+            std::fs::create_dir_all(&out).map_err(|e| e.to_string())?;
+            continue;
+        }
+        if let Some(parent) = out.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        let mut outfile = File::create(&out).map_err(|e| format!("Falha ao gravar {}: {e}", out.display()))?;
+        std::io::copy(&mut entry, &mut outfile).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+fn ensure_extracted(exe: &Path, start: u64, len: u64) -> Result<PathBuf, String> {
+    let dest = runtime_install_dir();
+    let stamp = dest.join(".payload-stamp");
+    let id = format!("{start}:{len}");
+    if bridge_script_path(&dest).is_file()
+        && std::fs::read_to_string(&stamp).ok().as_deref() == Some(id.as_str())
+    {
+        return Ok(dest);
+    }
+
+    let tmp = dest.with_file_name("runtime.tmp");
+    if tmp.exists() {
+        std::fs::remove_dir_all(&tmp).map_err(|e| e.to_string())?;
+    }
+    extract_payload(exe, start, len, &tmp)?;
+    if !bridge_script_path(&tmp).is_file() {
+        return Err("O executável não contém src/tauri_bridge.py.".into());
+    }
+    std::fs::write(tmp.join(".payload-stamp"), &id).map_err(|e| e.to_string())?;
+    if dest.exists() {
+        std::fs::remove_dir_all(&dest).map_err(|e| e.to_string())?;
+    }
+    std::fs::rename(&tmp, &dest).map_err(|e| format!("Falha ao instalar o runtime: {e}"))?;
+    Ok(dest)
+}
+
+fn locate_runtime() -> Result<PathBuf, String> {
+    let exe = std::env::current_exe().map_err(|e| format!("Executável não encontrado: {e}"))?;
+    if let Some((start, len)) = embedded_payload(&exe) {
+        return ensure_extracted(&exe, start, len);
+    }
+
+    let sibling = exe_dir().join("resources");
+    if bridge_script_path(&sibling).is_file() {
+        return Ok(sibling);
+    }
+    if bridge_script_path(&exe_dir()).is_file() {
+        return Ok(exe_dir());
+    }
+
+    Err(
+        "Este executável não traz o Python nem os scripts. Copie o arquivo gerado depois do build portátil, não só um .exe antigo."
+            .into(),
+    )
+}
+
+fn prepare_runtime() {
+    if cfg!(debug_assertions) {
+        return;
+    }
+    match locate_runtime() {
+        Ok(path) => {
+            let _ = RUNTIME_ROOT.set(path);
+        }
+        Err(err) => {
+            let _ = RUNTIME_ERROR.set(err);
+            let _ = RUNTIME_ROOT.set(exe_dir().join("resources"));
+        }
+    }
+}
+
+fn bridge_missing_message(bridge: &Path) -> String {
+    match RUNTIME_ERROR.get() {
+        Some(err) => format!("Bridge não encontrado em {}. {err}", bridge.display()),
+        None => format!("Bridge não encontrado em {}", bridge.display()),
+    }
 }
 
 fn bridge_script_path(root: &Path) -> PathBuf {
@@ -75,8 +262,31 @@ fn parse_progress_line(line: &str) -> Option<Value> {
     Value::deserialize(&mut de).ok()
 }
 
-fn python_env() -> [(&'static str, &'static str); 2] {
-    [("PYTHONUNBUFFERED", "1"), ("PYTHONIOENCODING", "utf-8")]
+fn command_envs(root: &Path) -> Vec<(&'static str, String)> {
+    let mut envs = vec![
+        ("PYTHONUNBUFFERED", "1".into()),
+        ("PYTHONIOENCODING", "utf-8".into()),
+        // Instalação em Program Files não deixa gravar __pycache__ ao lado dos scripts.
+        ("PYTHONDONTWRITEBYTECODE", "1".into()),
+        ("PYTHONNOUSERSITE", "1".into()),
+    ];
+
+    let bin = root.join("bin");
+    if bin.is_dir() {
+        let current = std::env::var("PATH").unwrap_or_default();
+        let sep = if cfg!(windows) { ";" } else { ":" };
+        envs.push((
+            "PATH",
+            format!("{}{}{}", bin.display(), sep, current),
+        ));
+        let ffmpeg_name = if cfg!(windows) { "ffmpeg.exe" } else { "ffmpeg" };
+        let ffmpeg = bin.join(ffmpeg_name);
+        if ffmpeg.is_file() {
+            envs.push(("FFMPEG_LOCATION", ffmpeg.to_string_lossy().into_owned()));
+        }
+    }
+
+    envs
 }
 
 fn python_candidates() -> &'static [&'static str] {
@@ -95,6 +305,14 @@ fn venv_python_path(root: &Path) -> PathBuf {
     }
 }
 
+fn bundled_python_path(root: &Path) -> PathBuf {
+    if cfg!(target_os = "windows") {
+        root.join("python").join("python.exe")
+    } else {
+        root.join("python").join("bin").join("python3")
+    }
+}
+
 fn python_is_available(path: &Path) -> bool {
     let mut cmd = Command::new(path);
     cmd.arg("--version")
@@ -107,6 +325,11 @@ fn python_is_available(path: &Path) -> bool {
 }
 
 fn resolve_python(root: &Path) -> Result<PathBuf, String> {
+    let bundled = bundled_python_path(root);
+    if bundled.is_file() && python_is_available(&bundled) {
+        return Ok(bundled);
+    }
+
     let venv_python = venv_python_path(root);
     if venv_python.is_file() && python_is_available(&venv_python) {
         return Ok(venv_python);
@@ -127,7 +350,7 @@ fn resolve_python(root: &Path) -> Result<PathBuf, String> {
         }
     }
     Err(
-        "Python não encontrado. Crie o ambiente com: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt"
+        "Python não encontrado. No desenvolvimento, crie o .venv na raiz do projeto. No instalador, gere o build de novo para incluir o Python portátil."
             .into(),
     )
 }
@@ -136,10 +359,7 @@ fn run_python_json(op: &str, payload: Value) -> Result<String, String> {
     let root = project_root();
     let bridge = bridge_script_path(&root);
     if !bridge.is_file() {
-        return Err(format!(
-            "Bridge não encontrado em {}",
-            bridge.display()
-        ));
+        return Err(bridge_missing_message(&bridge));
     }
 
     let python = resolve_python(&root)?;
@@ -152,7 +372,7 @@ fn run_python_json(op: &str, payload: Value) -> Result<String, String> {
     cmd.arg(&bridge)
         .arg(op)
         .current_dir(&root)
-        .envs(python_env())
+        .envs(command_envs(&root))
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -236,10 +456,7 @@ async fn start_download(app: tauri::AppHandle, request: DownloadRequest) -> Resu
     let root = project_root();
     let bridge = bridge_script_path(&root);
     if !bridge.is_file() {
-        return Err(format!(
-            "Bridge não encontrado em {}",
-            bridge.display()
-        ));
+        return Err(bridge_missing_message(&bridge));
     }
 
     let python = resolve_python(&root)?;
@@ -268,7 +485,7 @@ async fn start_download(app: tauri::AppHandle, request: DownloadRequest) -> Resu
     cmd.arg(&bridge)
         .arg("download")
         .current_dir(&root)
-        .envs(python_env())
+        .envs(command_envs(&root))
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -353,6 +570,7 @@ fn pick_output_folder(app: tauri::AppHandle) -> Option<String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    prepare_runtime();
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
