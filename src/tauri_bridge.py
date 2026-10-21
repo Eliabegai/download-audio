@@ -13,23 +13,69 @@ import json
 import os
 import sys
 
+# O Python embutido usa python._pth e não coloca a pasta do script no sys.path.
+_SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
+
 from bridge_hooks import emit_progress
 from js_runtime_utils import youtube_compat_opts
 
 
 def _repo_src_dir() -> str:
-    return os.path.dirname(os.path.abspath(__file__))
+    return _SRC_DIR
 
 
 def _ensure_import_path() -> None:
-    src_dir = _repo_src_dir()
-    if src_dir not in sys.path:
-        sys.path.insert(0, src_dir)
+    if _SRC_DIR not in sys.path:
+        sys.path.insert(0, _SRC_DIR)
 
 
 def _looks_like_youtube_url(text: str) -> bool:
     t = text.lower()
     return "youtube.com" in t or "youtu.be" in t
+
+
+def _is_direct_url(text: str) -> bool:
+    return _looks_like_youtube_url(text) or text.lower().startswith(("http://", "https://"))
+
+
+def _watch_url(info: dict | None) -> str | None:
+    if not info:
+        return None
+    for key in ("webpage_url", "url", "original_url"):
+        value = info.get(key) or ""
+        if isinstance(value, str) and value.startswith("http"):
+            return value
+    video_id = info.get("id")
+    if video_id and not str(video_id).startswith("http"):
+        return f"https://www.youtube.com/watch?v={video_id}"
+    return None
+
+
+def _resolve_to_video_url(raw: str, cookies: str | None) -> str:
+    """Nome de música vira a URL do primeiro resultado, como no preview."""
+    if _is_direct_url(raw):
+        return raw
+
+    import yt_dlp  # noqa: PLC0415
+
+    opts: dict = {
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "ignoreerrors": True,
+    }
+    opts.update(youtube_compat_opts(cookies))
+    with yt_dlp.YoutubeDL(opts) as ydl:
+        info = ydl.extract_info(f"ytsearch1:{raw}", download=False)
+    entries = (info or {}).get("entries") or []
+    if entries:
+        info = entries[0]
+    url = _watch_url(info)
+    if not url:
+        raise RuntimeError(f"Nenhum vídeo encontrado para: {raw}")
+    return url
 
 
 def _cookies_path(data: dict) -> str | None:
@@ -159,6 +205,11 @@ def cmd_download(data: dict) -> None:
 
     target_dir = output_path if output_path else _default_output_path()
     os.makedirs(target_dir, exist_ok=True)
+
+    if mode == "playlist" and not _is_direct_url(url_or_term):
+        raise ValueError("Para playlist, informe a URL. Para um nome de música, use Áudio ou Vídeo.")
+    if mode != "playlist":
+        url_or_term = _resolve_to_video_url(url_or_term, cookies)
 
     started_title = url_or_term
     if mode != "playlist":

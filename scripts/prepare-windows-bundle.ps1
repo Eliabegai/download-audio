@@ -43,6 +43,7 @@ if (-not $Pth) { throw "python*._pth não encontrado em $PythonDir" }
 $pthLines = @(Get-Content $Pth.FullName | ForEach-Object { $_ -replace '^\s*#\s*import site\s*$', 'import site' })
 if ($pthLines -notcontains "Lib\site-packages") { $pthLines += "Lib\site-packages" }
 if ($pthLines -notcontains "import site") { $pthLines += "import site" }
+if ($pthLines -notcontains "..\src") { $pthLines += "..\src" }
 Set-Content -Path $Pth.FullName -Value $pthLines -Encoding ascii
 
 $NeedsPip = -not (Test-Path $Stamp) -or ((Get-Content $Stamp -Raw).Trim() -ne $ReqHash)
